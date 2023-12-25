@@ -1,0 +1,156 @@
+.header {
+  display: flex;
+  position: relative;
+  margin-right: 20px;
+}
+
+
+
+.child {
+  position: relative;
+  display: inline;
+  top: 15vh;
+}
+
+.service-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  bottom: 2vh;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 45px;
+}
+
+.parent {
+  position: relative;
+  top: 17vh;
+  padding: 10px 20px;
+  font-size: 18px;
+  display: flex;
+  /* position: absolute; */
+  border: 5px solid #4caf50;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 5px;
+}
+
+
+
+/*         .active:hover {
+            color: black!important;
+            background-color: white!important;
+            border-color: #4caf50!important;
+        } */
+
+
+.active,
+.idle1:hover {
+  background-color: #5b875e;
+  /* #44ab54;#568558;#5b875e;#11b12a */
+  color: white;
+  border-color: #083f0b;
+  /*  #11b12a;#083f0b; */
+}
+
+
+
+
+
+
+
+
+
+.idle:hover,
+.selected {
+  background-color: #4caf50;
+  color: white;
+  border-color: #083f0b;
+}
+
+/* .selected:hover {
+        /* border: 2px solid black;*/
+/*
+      }
+
+      */
+/* Add CSS for the popover */
+
+.popover {
+  position: absolute;
+  display: none;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  z-index: 10;
+  top: 52%;
+  left: 32%;
+  max-width: 120px;
+  transform: translate(-100%, -100%);
+  text-align: center;
+}
+
+.popover:hover {
+  display: block;
+  font-size: 17px;
+  max-height: 100%;
+}
+
+#data {
+  text-align: center;
+  /*             position: relative;
+            top: 33vh;
+            left: 42vh; */
+  background-image: "";
+}
+
+img {
+  width: 50vh;
+}
+
+
+.timetable {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  grid-gap: 10px;
+  border: 5px solid #000;
+  padding: 10px;
+  box-sizing: border-box;
+
+  /*                 position: absolute;
+                  top: 82vh; */
+}
+
+.day,
+.period {
+  background-color: grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+.day:nth-of-type(odd) {
+  background-color: purple;
+}
+
+/*        .day:nth-of-type(even) {
+                      background-color: black;
+                  } */
+
+/*             @media screen and (max-width: 768px) {
+                  .timetable {
+                      grid-template-columns: repeat(8, 1fr);
+                  }
+              } */
+
+.calendar {
+  position: absolute;
+  top: 37vh;
+
+
+
+
+}

@@ -1,0 +1,51 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  bottom: 45vh;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-image: url("https://www.wired.com/wp-content/uploads/2014/11/1wKJozK80xjv3dD609wE-aQ-1.gif");
+  background-repeat: round;
+  background-size: cover;
+  /* background-blend-mode: saturation; */
+  background-attachment: fixed;
+}
+
+.clicked {
+  animation: clickAnimation 0.5s ease;
+  animation-iteration-count: infinite;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-iteration-count: infinite;
+  -o-animation-iteration-count: infinite;
+  -ms-animation-iteration-count: infinite;
+}
+
+@keyframes clickAnimation {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.text-choice {
+  padding: 10px 20px;
+  font-size: 18px;
+  border: 5px solid #4caf50;
+  border-radius: 15px;
+  margin: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
