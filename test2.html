@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="eng">
+  <head>
+    <title>test 2 : calendar for now</title>
+    <style>
+      .timetable {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        grid-gap: 10px;
+        border: 5px solid #000;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .day,
+      .period {
+        background-color: grey;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 5px;
+        box-sizing: border-box;
+      }
+
+      .day:nth-of-type(odd) {
+        background-color: purple;
+      }
+      /*        .day:nth-of-type(even) {
+            background-color: black;
+        } */
+
+      @media screen and (max-width: 768px) {
+        .timetable {
+          grid-template-columns: repeat(8, 1fr);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>TIME TABLE</h1>
+    <div class="timetable">
+      <div class="day period">Day/Period</div>
+      <div class="period">I<br />9:30-10:20</div>
+      <div class="period">II<br />10:20-11:10</div>
+      <div class="period">III<br />11:10-12:00</div>
+      <div class="period">IV<br />12:40-1:30</div>
+      <div class="period">V<br />1:30-2:20</div>
+      <div class="period">VI<br />2:20-3:10</div>
+      <div class="period">VII<br />3:10-4:00</div>
+
+      <div class="day">Monday</div>
+      <div>Eng</div>
+      <div>Mat</div>
+      <div>Che</div>
+      <div>Lab</div>
+      <div>Lab</div>
+      <div>Lab</div>
+      <div>Phy</div>
+
+      <div class="day">Tuesday</div>
+      <div>Lab</div>
+      <div>Lab</div>
+      <div>Lab</div>
+      <div>Eng</div>
+      <div>Che</div>
+      <div>Mat</div>
+      <div>Sports</div>
+
+      <!-- And so on for the rest of the days -->
+    </div>
+  </body>
+</html>
