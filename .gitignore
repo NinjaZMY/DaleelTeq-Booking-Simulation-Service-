@@ -1,0 +1,38 @@
+# Security: Ignore environment variables
+npm-debug.log
+node_modules/
+# Node (if using npm for frontend)
+
+*.class
+dist/
+out/
+build/
+# Build files
+
+*.log
+logs/
+# Logs
+
+.m2/
+*.ear
+*.war
+*.jar
+# Maven
+
+*~
+*.swo
+*.swp
+.DS_Store
+*.ipr
+*.iws
+*.iml
+.idea/
+# IDE
+
+.mvn/
+target/
+*.local
+# Optional: Ignore other sensitive files
+
+.env
+
