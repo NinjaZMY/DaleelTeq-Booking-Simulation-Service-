@@ -1,38 +1,41 @@
-# Security: Ignore environment variables
-npm-debug.log
-node_modules/
-# Node (if using npm for frontend)
+# ===========================
+# Git Ignore Rules
+# ===========================
 
-*.class
-dist/
-out/
-build/
-# Build files
+# Environment Variables (SECURITY: Never commit actual .env files)
+.env
+.env.local
+.env.*.local
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+
+# Maven
+target/
+.mvn/
+mvnw.cmd
+
+# Build artifacts
+*.jar
+*.war
+*.ear
+
+# Logs
 *.log
 logs/
-# Logs
 
-.m2/
-*.ear
-*.war
-*.jar
-# Maven
-
-*~
-*.swo
-*.swp
+# OS
+Thumbs.db
 .DS_Store
-*.ipr
-*.iws
-*.iml
-.idea/
-# IDE
 
-.mvn/
-target/
-*.local
-# Optional: Ignore other sensitive files
-
-.env
-
+# Node (if using any frontend tools)
+node_modules/
+package-lock.json
+yarn.lock

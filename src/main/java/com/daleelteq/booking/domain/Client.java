@@ -1,20 +1,23 @@
 package com.daleelteq.booking.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.Instant;
 
 /**
- * C (Clients) - Represents a client who can book appointments
+ * Client Entity (C)
+ * Defines clients who book appointments.
  */
 @Entity
 @Table(name = "clients")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(exclude = {"createdAt"})
+@ToString(exclude = {"createdAt"})
 public class Client {
 
     @Id
@@ -22,12 +25,16 @@ public class Client {
     private Long id;
 
     @Column(nullable = false, length = 255)
-    private String lib; // Client name
+    private String lib;
 
     @Column(nullable = false, length = 20)
-    private String number; // Phone number
+    private String number;
 
-    @Version
-    private Long version;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
 }
-

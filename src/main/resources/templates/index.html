@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DaleelTeq Booking Service - Test UI</title>
+    <title>DaleelTeq Booking Simulation Service</title>
     <style>
         * {
             margin: 0;
@@ -14,6 +14,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,161 +24,109 @@
             margin: 0 auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
         }
 
-        header {
+        .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
 
-        header h1 {
+        .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
         }
 
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #eee;
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .status-bar {
             background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e9ecef;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
         }
 
-        .tab-button {
-            padding: 15px 25px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-size: 1em;
-            color: #666;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
+        .status-item {
+            text-align: center;
         }
 
-        .tab-button:hover {
-            background: #e9ecef;
-            color: #667eea;
+        .status-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 5px;
         }
 
-        .tab-button.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+        .status-value {
+            font-size: 1.5em;
             font-weight: bold;
+            color: #667eea;
         }
 
         .content {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            padding: 20px;
-            min-height: 600px;
-        }
-
-        .tab-content {
-            display: none;
-            width: 100%;
-        }
-
-        .tab-content.active {
-            display: flex;
-            gap: 20px;
-        }
-
-        .data-panel {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            background: #f8f9fa;
+            padding: 30px;
+            max-height: 70vh;
             overflow-y: auto;
-            max-height: 600px;
         }
 
-        .data-panel h3 {
+        .section {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .section h3 {
+            color: #667eea;
             margin-bottom: 15px;
-            color: #333;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
         }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
+        .data-list {
+            list-style: none;
             font-size: 0.9em;
-        }
-
-        .data-table th {
-            background: #667eea;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            font-weight: bold;
-        }
-
-        .data-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .data-table tr:hover {
-            background: #f0f0f0;
-        }
-
-        .request-panel {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
             background: white;
-        }
-
-        .request-panel h3 {
-            margin-bottom: 15px;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            font-family: monospace;
-            font-size: 0.9em;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
         }
 
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
+        .data-list li {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .data-list li:last-child {
+            border-bottom: none;
         }
 
         .button-group {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 15px;
+            margin: 15px 0;
         }
 
-        button {
-            padding: 10px 20px;
+        button, input[type="button"], input[type="submit"] {
+            padding: 10px 15px;
             border: none;
-            border-radius: 3px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.9em;
             transition: all 0.3s ease;
         }
 
@@ -189,7 +138,7 @@
         .btn-primary:hover {
             background: #5568d3;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .btn-danger {
@@ -200,12 +149,12 @@
         .btn-danger:hover {
             background: #c82333;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
 
         .btn-warning {
             background: #ffc107;
-            color: black;
+            color: #333;
         }
 
         .btn-warning:hover {
@@ -213,60 +162,73 @@
             transform: translateY(-2px);
         }
 
-        .response-panel {
-            margin-top: 15px;
-            border-top: 2px solid #ddd;
-            padding-top: 15px;
+        .result-box {
+            grid-column: 1 / -1;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
         }
 
-        .response-status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-weight: bold;
+        .result-box h3 {
+            color: #667eea;
             margin-bottom: 10px;
         }
 
-        .response-status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .response-status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .response-content {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 3px;
-            border-left: 3px solid #667eea;
-            font-family: monospace;
+        .result-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
             font-size: 0.85em;
             max-height: 300px;
             overflow-y: auto;
             white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .available-ids {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-            padding: 10px;
-            border-radius: 3px;
-            margin-top: 10px;
             word-break: break-all;
         }
 
-        .action-buttons {
+        .result-content.error {
+            border-left-color: #dc3545;
+            background: #ffe5e5;
+        }
+
+        .result-content.success {
+            border-left-color: #28a745;
+            background: #e5ffe5;
+        }
+
+        input[type="text"], input[type="date"], input[type="time"], select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .checkbox-group {
             display: flex;
+            align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         .modal {
@@ -277,7 +239,8 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
         }
 
         .modal.show {
@@ -287,913 +250,491 @@
         }
 
         .modal-content {
-            background: white;
+            background-color: white;
             padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
             text-align: center;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
 
-        .modal-content h3 {
+        .modal-content h2 {
+            color: #dc3545;
             margin-bottom: 15px;
-            color: #333;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            color: #495057;
         }
 
         .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
-        .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #667eea;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 3px;
-            color: #004085;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .success-box {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 3px;
-            color: #155724;
-        }
-
-        .error-box {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 3px;
-            color: #721c24;
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🗓️ DaleelTeq Booking Service</h1>
-            <p>REST API Testing Dashboard with Live Data</p>
-        </header>
+<div class="container">
+    <div class="header">
+        <h1>📅 DaleelTeq Booking Simulation Service</h1>
+        <p>Manage services, employees, clients, and appointments</p>
+    </div>
 
-        <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('services')">Services (S)</button>
-            <button class="tab-button" onclick="switchTab('employees')">Employees (E)</button>
-            <button class="tab-button" onclick="switchTab('clients')">Clients (C)</button>
-            <button class="tab-button" onclick="switchTab('employeeServices')">Employee Services (ES)</button>
-            <button class="tab-button" onclick="switchTab('rendezvous')">Rendezvous (R)</button>
-            <button class="tab-button" onclick="switchTab('notifications')">Notifications (N)</button>
-            <button class="tab-button" onclick="switchTab('admin')">Admin Tools</button>
+    <div class="status-bar" id="statusBar">
+        <div class="status-item">
+            <div class="status-label">Services</div>
+            <div class="status-value" id="servicesCount">0</div>
         </div>
-
-        <div class="content">
-            <!-- SERVICES TAB -->
-            <div id="services" class="tab-content active">
-                <div class="data-panel">
-                    <h3>Services List</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name (lib)</th>
-                                <th>Time Value (mins)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="servicesTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="servicesIds" style="margin-top: 10px;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Service Operations</h3>
-                    <div class="info-box">Available time values: 15, 20, 25, 30 minutes</div>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="serviceOp">
-                            <option value="get">GET by ID</option>
-                            <option value="create">CREATE</option>
-                            <option value="update">UPDATE</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Service ID (for GET/UPDATE/DELETE)</label>
-                        <input type="number" id="serviceId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Service Name (lib)</label>
-                        <input type="text" id="serviceName" placeholder="e.g., Haircut">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Time Value (mins)</label>
-                        <input type="number" id="serviceTimeValue" placeholder="15, 20, 25, or 30">
-                    </div>
-
-                    <button class="btn-primary" onclick="executeServiceRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="serviceResponse" style="display: none;">
-                        <div class="response-status" id="serviceStatus"></div>
-                        <div class="response-content" id="serviceContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EMPLOYEES TAB -->
-            <div id="employees" class="tab-content">
-                <div class="data-panel">
-                    <h3>Employees List</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name (lib)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="employeesTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="employeesIds" style="margin-top: 10px;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Employee Operations</h3>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="employeeOp">
-                            <option value="get">GET by ID</option>
-                            <option value="create">CREATE</option>
-                            <option value="update">UPDATE</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Employee ID (for GET/UPDATE/DELETE)</label>
-                        <input type="number" id="employeeId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Employee Name (lib)</label>
-                        <input type="text" id="employeeName" placeholder="e.g., John Doe">
-                    </div>
-
-                    <button class="btn-primary" onclick="executeEmployeeRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="employeeResponse" style="display: none;">
-                        <div class="response-status" id="employeeStatus"></div>
-                        <div class="response-content" id="employeeContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CLIENTS TAB -->
-            <div id="clients" class="tab-content">
-                <div class="data-panel">
-                    <h3>Clients List</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name (lib)</th>
-                                <th>Phone (number)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clientsTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="clientsIds" style="margin-top: 10px;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Client Operations</h3>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="clientOp">
-                            <option value="get">GET by ID</option>
-                            <option value="create">CREATE</option>
-                            <option value="update">UPDATE</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Client ID (for GET/UPDATE/DELETE)</label>
-                        <input type="number" id="clientId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Client Name (lib)</label>
-                        <input type="text" id="clientName" placeholder="e.g., Jane Smith">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="text" id="clientPhone" placeholder="e.g., +1234567890">
-                    </div>
-
-                    <button class="btn-primary" onclick="executeClientRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="clientResponse" style="display: none;">
-                        <div class="response-status" id="clientStatus"></div>
-                        <div class="response-content" id="clientContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EMPLOYEE SERVICES TAB -->
-            <div id="employeeServices" class="tab-content">
-                <div class="data-panel">
-                    <h3>Employee Services (Timeslots)</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Employee</th>
-                                <th>Service</th>
-                                <th>Date</th>
-                                <th>Start-End</th>
-                                <th>X2</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="esTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="esIds" style="margin-top: 10px;"></div>
-                    <div class="available-ids" id="freeEsIds" style="margin-top: 10px; background: #d4edda;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Employee Service Operations</h3>
-                    <div class="info-box">Work hours: 08:00 - 17:00 | Date format: YYYY-MM-DD</div>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="esOp">
-                            <option value="get">GET by ID</option>
-                            <option value="create">CREATE</option>
-                            <option value="update">UPDATE</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>ES ID (for GET/UPDATE/DELETE)</label>
-                        <input type="number" id="esId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Employee ID</label>
-                        <input type="number" id="esEmployeeId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Service ID</label>
-                        <input type="number" id="esServiceId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Date (YYYY-MM-DD)</label>
-                        <input type="text" id="esDate" placeholder="e.g., 2025-12-31">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Start Time (HH:mm)</label>
-                        <input type="text" id="esStart" placeholder="e.g., 09:00">
-                    </div>
-
-                    <div class="form-group">
-                        <label>End Time (HH:mm)</label>
-                        <input type="text" id="esEnd" placeholder="e.g., 10:00">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Double Duration (X2)?</label>
-                        <select id="esX2">
-                            <option value="false">No (single)</option>
-                            <option value="true">Yes (double)</option>
-                        </select>
-                    </div>
-
-                    <button class="btn-primary" onclick="executeESRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="esResponse" style="display: none;">
-                        <div class="response-status" id="esStatus"></div>
-                        <div class="response-content" id="esContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RENDEZVOUS TAB -->
-            <div id="rendezvous" class="tab-content">
-                <div class="data-panel">
-                    <h3>Rendezvous (Bookings)</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>ES ID</th>
-                                <th>Client</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rvTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="rvIds" style="margin-top: 10px;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Rendezvous Operations</h3>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="rvOp">
-                            <option value="book">BOOK Appointment</option>
-                            <option value="cancel">CANCEL Appointment</option>
-                            <option value="get">GET by ID</option>
-                            <option value="update">UPDATE</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>RV ID (for GET/CANCEL/UPDATE/DELETE)</label>
-                        <input type="number" id="rvId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Employee Service ID (for BOOK)</label>
-                        <input type="number" id="rvEsId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Client ID (for BOOK)</label>
-                        <input type="number" id="rvClientId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Cancelled By (for CANCEL)</label>
-                        <select id="rvCancelledBy">
-                            <option value="Client">Client</option>
-                            <option value="Employee">Employee</option>
-                        </select>
-                    </div>
-
-                    <button class="btn-primary" onclick="executeRVRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="rvResponse" style="display: none;">
-                        <div class="response-status" id="rvStatus"></div>
-                        <div class="response-content" id="rvContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NOTIFICATIONS TAB -->
-            <div id="notifications" class="tab-content">
-                <div class="data-panel">
-                    <h3>Notifications</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>RV ID</th>
-                                <th>Type</th>
-                                <th>Value</th>
-                                <th>Created</th>
-                            </tr>
-                        </thead>
-                        <tbody id="notificationsTable">
-                        </tbody>
-                    </table>
-                    <div class="available-ids" id="notificationsIds" style="margin-top: 10px;"></div>
-                </div>
-                <div class="request-panel">
-                    <h3>Notification Operations</h3>
-                    <div class="info-box">Notifications are typically created automatically during booking/cancellation</div>
-
-                    <div class="form-group">
-                        <label>Operation</label>
-                        <select id="notificationOp">
-                            <option value="create">CREATE Manual Notification</option>
-                            <option value="get">GET by ID</option>
-                            <option value="delete">DELETE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Notification ID (for GET/DELETE)</label>
-                        <input type="number" id="notificationId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Rendezvous ID (for CREATE)</label>
-                        <input type="number" id="notificationRvId" placeholder="e.g., 1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Type (booked/cancelled)</label>
-                        <input type="text" id="notificationType" placeholder="e.g., booked">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Value (message)</label>
-                        <textarea id="notificationValue" placeholder="e.g., Appointment confirmed"></textarea>
-                    </div>
-
-                    <button class="btn-primary" onclick="executeNotificationRequest()">Execute Request</button>
-
-                    <div class="response-panel" id="notificationResponse" style="display: none;">
-                        <div class="response-status" id="notificationStatus"></div>
-                        <div class="response-content" id="notificationContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ADMIN TOOLS TAB -->
-            <div id="admin" class="tab-content">
-                <div class="data-panel">
-                    <h3>Database Summary</h3>
-                    <div id="adminStats" style="line-height: 1.8;">
-                        <p><strong>Total Services:</strong> <span id="statServices">0</span></p>
-                        <p><strong>Total Employees:</strong> <span id="statEmployees">0</span></p>
-                        <p><strong>Total Clients:</strong> <span id="statClients">0</span></p>
-                        <p><strong>Total Employee Services:</strong> <span id="statES">0</span></p>
-                        <p><strong>Free Slots:</strong> <span id="statFreeES">0</span></p>
-                        <p><strong>Total Rendezvous:</strong> <span id="statRV">0</span></p>
-                        <p><strong>Total Notifications:</strong> <span id="statNotifications">0</span></p>
-                    </div>
-                </div>
-                <div class="request-panel">
-                    <h3>Admin Tools</h3>
-                    <div class="action-buttons">
-                        <button class="btn-danger" onclick="deleteAllNotifications()">Delete All Notifications</button>
-                        <button class="btn-danger" onclick="deleteAllRendezvous()">Delete All Rendezvous</button>
-                        <button class="btn-danger" onclick="deleteAllES()">Delete All Employee Services</button>
-                        <button class="btn-danger" onclick="deleteAllClients()">Delete All Clients</button>
-                        <button class="btn-danger" onclick="deleteAllEmployees()">Delete All Employees</button>
-                        <button class="btn-danger" onclick="deleteAllServices()">Delete All Services</button>
-                        <button class="btn-warning" onclick="clearDatabase()">⚠️ CLEAR ENTIRE DATABASE</button>
-                    </div>
-
-                    <div class="response-panel" id="adminResponse" style="display: none; margin-top: 20px;">
-                        <div class="response-status" id="adminStatus"></div>
-                        <div class="response-content" id="adminContent"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="status-item">
+            <div class="status-label">Employees</div>
+            <div class="status-value" id="employeesCount">0</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">Clients</div>
+            <div class="status-value" id="clientsCount">0</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">Timeslots (ES)</div>
+            <div class="status-value" id="esCount">0</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">Rendez-vous</div>
+            <div class="status-value" id="rvCount">0</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">Notifications</div>
+            <div class="status-value" id="notificationsCount">0</div>
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h3 id="confirmTitle">Confirm Action</h3>
-            <p id="confirmMessage">Are you sure?</p>
-            <div class="modal-buttons">
-                <button class="btn-primary" onclick="confirmAction()">Yes, Proceed</button>
-                <button class="btn-primary" onclick="cancelAction()" style="background: #6c757d;">Cancel</button>
+    <div class="content">
+        <div class="section">
+            <h3>⚙️ Services</h3>
+            <div class="form-group">
+                <label>Service Name:</label>
+                <input type="text" id="serviceName" placeholder="e.g., Haircut">
+            </div>
+            <div class="form-group">
+                <label>Time Value (minutes):</label>
+                <select id="serviceTime">
+                    <option value="">Select duration</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createService()">Create Service</button>
+                <button class="btn-danger" onclick="deleteAllServices()">Delete All</button>
+            </div>
+            <h4>Available Services:</h4>
+            <ul class="data-list" id="servicesList"></ul>
+        </div>
+
+        <div class="section">
+            <h3>👥 Employees</h3>
+            <div class="form-group">
+                <label>Employee Name:</label>
+                <input type="text" id="employeeName" placeholder="e.g., John Doe">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createEmployee()">Create Employee</button>
+                <button class="btn-danger" onclick="deleteAllEmployees()">Delete All</button>
+            </div>
+            <h4>Available Employees:</h4>
+            <ul class="data-list" id="employeesList"></ul>
+        </div>
+
+        <div class="section">
+            <h3>👤 Clients</h3>
+            <div class="form-group">
+                <label>Client Name:</label>
+                <input type="text" id="clientName" placeholder="e.g., C1">
+            </div>
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="text" id="clientPhone" placeholder="e.g., +20123456789">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createClient()">Create Client</button>
+                <button class="btn-danger" onclick="deleteAllClients()">Delete All</button>
+            </div>
+            <h4>Available Clients:</h4>
+            <ul class="data-list" id="clientsList"></ul>
+        </div>
+
+        <div class="section">
+            <h3>⏰ Timeslots (ES)</h3>
+            <div class="form-group">
+                <label>Employee ID:</label>
+                <input type="number" id="esEmployeeId" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Service ID:</label>
+                <input type="number" id="esServiceId" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Date:</label>
+                <input type="date" id="esDate">
+            </div>
+            <div class="form-group">
+                <label>Start Time:</label>
+                <input type="time" id="esStart">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="esX2">
+                <label for="esX2">Double Duration (x2)</label>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createES()">Create Timeslot</button>
+                <button class="btn-danger" onclick="deleteAllES()">Delete All</button>
+            </div>
+            <h4>Available Timeslots:</h4>
+            <ul class="data-list" id="esList"></ul>
+        </div>
+
+        <div class="section">
+            <h3>📋 Rendez-vous</h3>
+            <div class="form-group">
+                <label>Timeslot ID (ES ID):</label>
+                <input type="number" id="rvESId" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Client ID:</label>
+                <input type="number" id="rvClientId" placeholder="1">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="bookRendezVous()">Book Appointment</button>
+                <button class="btn-danger" onclick="deleteAllRendezVous()">Delete All</button>
+            </div>
+            <h4>Active Rendez-vous:</h4>
+            <ul class="data-list" id="rvList"></ul>
+        </div>
+
+        <div class="section">
+            <h3>🔔 Notifications</h3>
+            <div class="form-group">
+                <label>Rendez-vous ID:</label>
+                <input type="number" id="notifRVId" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Type:</label>
+                <select id="notifType">
+                    <option value="booked">Booked</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createNotification()">Create Notification</button>
+                <button class="btn-danger" onclick="deleteAllNotifications()">Delete All</button>
+            </div>
+            <h4>Notifications:</h4>
+            <ul class="data-list" id="notificationsList"></ul>
+        </div>
+
+        <div class="result-box">
+            <h3>📊 Response & Status</h3>
+            <div class="result-content" id="resultBox">API responses will appear here...</div>
+            <div class="button-group" style="margin-top: 15px;">
+                <button class="btn-primary" onclick="refreshData()">Refresh Data</button>
+                <button class="btn-warning" onclick="openClearDBModal()">Clear All Database</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let pendingAction = null;
+<!-- Clear DB Confirmation Modal -->
+<div id="clearDBModal" class="modal">
+    <div class="modal-content">
+        <h2>⚠️ Clear Database?</h2>
+        <p>This will delete ALL data from the database. This action cannot be undone.</p>
+        <p>Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="confirmClearDB()">Yes, Clear Everything</button>
+            <button class="btn-primary" onclick="closeClearDBModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
-        function switchTab(tabName) {
-            // Hide all tabs
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
+<script>
+    const API_BASE = 'http://localhost:8080/api';
 
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        refreshData();
+    });
 
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+    function log(message, isError = false) {
+        const resultBox = document.getElementById('resultBox');
+        resultBox.textContent = message;
+        resultBox.className = isError ? 'result-content error' : 'result-content success';
+    }
 
-            // Refresh data
-            refreshAllData();
+    function refreshData() {
+        fetch(`${API_BASE}/db-status`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('servicesCount').textContent = data.services;
+                document.getElementById('employeesCount').textContent = data.employees;
+                document.getElementById('clientsCount').textContent = data.clients;
+                document.getElementById('esCount').textContent = data.employeeXServices;
+                document.getElementById('rvCount').textContent = data.rendezVous;
+                document.getElementById('notificationsCount').textContent = data.notifications;
+            });
+
+        // Load lists
+        loadServices();
+        loadEmployees();
+        loadClients();
+        loadES();
+        loadRendezVous();
+        loadNotifications();
+    }
+
+    function loadServices() {
+        fetch(`${API_BASE}/services`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('servicesList');
+                list.innerHTML = data.map(s => `<li>ID ${s.id}: ${s.lib} (${s.timeValue} min)</li>`).join('');
+            });
+    }
+
+    function loadEmployees() {
+        fetch(`${API_BASE}/employees`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('employeesList');
+                list.innerHTML = data.map(e => `<li>ID ${e.id}: ${e.lib}</li>`).join('');
+            });
+    }
+
+    function loadClients() {
+        fetch(`${API_BASE}/clients`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('clientsList');
+                list.innerHTML = data.map(c => `<li>ID ${c.id}: ${c.lib} (${c.number})</li>`).join('');
+            });
+    }
+
+    function loadES() {
+        fetch(`${API_BASE}/es`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('esList');
+                list.innerHTML = data.map(es => `<li>ID ${es.id}: ${es.date} ${es.start}-${es.end} [${es.status}]</li>`).join('');
+            });
+    }
+
+    function loadRendezVous() {
+        fetch(`${API_BASE}/rendezvous`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('rvList');
+                list.innerHTML = data.map(rv => `<li>ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]</li>`).join('');
+            });
+    }
+
+    function loadNotifications() {
+        fetch(`${API_BASE}/notifications`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('notificationsList');
+                list.innerHTML = data.map(n => `<li>ID ${n.id}: ${n.type} - ${n.value}</li>`).join('');
+            });
+    }
+
+    function createService() {
+        const name = document.getElementById('serviceName').value;
+        const time = document.getElementById('serviceTime').value;
+
+        if (!name || !time) {
+            log('Please fill all fields', true);
+            return;
         }
 
-        function refreshAllData() {
-            fetch('/api/services').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('servicesTable');
-                tbody.innerHTML = '';
-                data.data.forEach(s => {
-                    tbody.innerHTML += `<tr><td>${s.id}</td><td>${s.lib}</td><td>${s.timeValue}</td></tr>`;
-                });
-                document.getElementById('servicesIds').innerHTML = '<strong>Available Service IDs:</strong> ' + (data.data.map(s => s.id).join(', ') || 'None');
-                document.getElementById('statServices').textContent = data.data.length;
-            });
+        fetch(`${API_BASE}/services`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lib: name, timeValue: parseInt(time) })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            fetch('/api/employees').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('employeesTable');
-                tbody.innerHTML = '';
-                data.data.forEach(e => {
-                    tbody.innerHTML += `<tr><td>${e.id}</td><td>${e.lib}</td></tr>`;
-                });
-                document.getElementById('employeesIds').innerHTML = '<strong>Available Employee IDs:</strong> ' + (data.data.map(e => e.id).join(', ') || 'None');
-                document.getElementById('statEmployees').textContent = data.data.length;
-            });
-
-            fetch('/api/clients').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('clientsTable');
-                tbody.innerHTML = '';
-                data.data.forEach(c => {
-                    tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.lib}</td><td>${c.number}</td></tr>`;
-                });
-                document.getElementById('clientsIds').innerHTML = '<strong>Available Client IDs:</strong> ' + (data.data.map(c => c.id).join(', ') || 'None');
-                document.getElementById('statClients').textContent = data.data.length;
-            });
-
-            fetch('/api/es').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('esTable');
-                tbody.innerHTML = '';
-                data.data.forEach(es => {
-                    tbody.innerHTML += `<tr><td>${es.id}</td><td>E${es.idE}</td><td>S${es.idS}</td><td>${es.date}</td><td>${es.start}-${es.end}</td><td>${es.x2 ? 'Yes' : 'No'}</td><td><strong>${es.status}</strong></td></tr>`;
-                });
-                document.getElementById('esIds').innerHTML = '<strong>All ES IDs:</strong> ' + (data.data.map(es => es.id).join(', ') || 'None');
-                document.getElementById('statES').textContent = data.data.length;
-            });
-
-            fetch('/api/es/free').then(r => r.json()).then(data => {
-                document.getElementById('freeEsIds').innerHTML = '<strong style="color: green;">FREE ES IDs (Available for Booking):</strong> ' + (data.data.map(es => es.id).join(', ') || 'None');
-                document.getElementById('statFreeES').textContent = data.data.length;
-            });
-
-            fetch('/api/rendezvous').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('rvTable');
-                tbody.innerHTML = '';
-                data.data.forEach(rv => {
-                    tbody.innerHTML += `<tr><td>${rv.id}</td><td>${rv.idEs}</td><td>C${rv.idC}</td><td>${rv.status}</td><td>${rv.createdAt ? rv.createdAt.substring(0, 10) : '-'}</td></tr>`;
-                });
-                document.getElementById('rvIds').innerHTML = '<strong>Available Rendezvous IDs:</strong> ' + (data.data.map(rv => rv.id).join(', ') || 'None');
-                document.getElementById('statRV').textContent = data.data.length;
-            });
-
-            fetch('/api/notifications').then(r => r.json()).then(data => {
-                const tbody = document.getElementById('notificationsTable');
-                tbody.innerHTML = '';
-                data.data.forEach(n => {
-                    tbody.innerHTML += `<tr><td>${n.id}</td><td>${n.idR}</td><td>${n.type}</td><td>${n.value.substring(0, 30)}</td><td>${n.createdAt ? n.createdAt.substring(0, 10) : '-'}</td></tr>`;
-                });
-                document.getElementById('notificationsIds').innerHTML = '<strong>Available Notification IDs:</strong> ' + (data.data.map(n => n.id).join(', ') || 'None');
-                document.getElementById('statNotifications').textContent = data.data.length;
-            });
+    function createEmployee() {
+        const name = document.getElementById('employeeName').value;
+        if (!name) {
+            log('Please enter employee name', true);
+            return;
         }
 
-        function showResponse(panelId, statusId, contentId, success, data) {
-            const panel = document.getElementById(panelId);
-            const status = document.getElementById(statusId);
-            const content = document.getElementById(contentId);
+        fetch(`${API_BASE}/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lib: name })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            panel.style.display = 'block';
-            status.className = 'response-status ' + (success ? 'success' : 'error');
-            status.textContent = (success ? '✓ SUCCESS' : '✗ ERROR') + ' - ' + (data.message || 'Request completed');
-            content.textContent = JSON.stringify(data, null, 2);
+    function createClient() {
+        const name = document.getElementById('clientName').value;
+        const phone = document.getElementById('clientPhone').value;
 
-            // Auto-refresh data after successful operation
-            if (success) {
-                setTimeout(refreshAllData, 500);
-            }
+        if (!name || !phone) {
+            log('Please fill all fields', true);
+            return;
         }
 
-        function executeServiceRequest() {
-            const op = document.getElementById('serviceOp').value;
-            const id = document.getElementById('serviceId').value;
-            const name = document.getElementById('serviceName').value;
-            const timeValue = document.getElementById('serviceTimeValue').value;
+        fetch(`${API_BASE}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lib: name, number: phone })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            let url, method, body;
+    function createES() {
+        const empId = document.getElementById('esEmployeeId').value;
+        const srvId = document.getElementById('esServiceId').value;
+        const date = document.getElementById('esDate').value;
+        const start = document.getElementById('esStart').value;
+        const x2 = document.getElementById('esX2').checked;
 
-            if (op === 'get') {
-                url = `/api/services/${id}`;
-                method = 'GET';
-            } else if (op === 'create') {
-                url = `/api/services`;
-                method = 'POST';
-                body = { lib: name, timeValue: parseInt(timeValue) };
-            } else if (op === 'update') {
-                url = `/api/services/${id}`;
-                method = 'PUT';
-                body = { lib: name, timeValue: parseInt(timeValue) };
-            } else if (op === 'delete') {
-                url = `/api/services/${id}`;
-                method = 'DELETE';
-            }
-
-            const options = { method };
-            if (body) options.headers = { 'Content-Type': 'application/json' };
-            if (body) options.body = JSON.stringify(body);
-
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('serviceResponse', 'serviceStatus', 'serviceContent', data.success, data);
-            }).catch(e => {
-                showResponse('serviceResponse', 'serviceStatus', 'serviceContent', false, { message: e.message });
-            });
+        if (!empId || !srvId || !date || !start) {
+            log('Please fill all required fields', true);
+            return;
         }
 
-        function executeEmployeeRequest() {
-            const op = document.getElementById('employeeOp').value;
-            const id = document.getElementById('employeeId').value;
-            const name = document.getElementById('employeeName').value;
+        fetch(`${API_BASE}/es`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                idE: parseInt(empId),
+                idS: parseInt(srvId),
+                date: date,
+                start: start,
+                x2: x2
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            let url, method, body;
+    function bookRendezVous() {
+        const esId = document.getElementById('rvESId').value;
+        const clientId = document.getElementById('rvClientId').value;
 
-            if (op === 'get') {
-                url = `/api/employees/${id}`;
-                method = 'GET';
-            } else if (op === 'create') {
-                url = `/api/employees`;
-                method = 'POST';
-                body = { lib: name };
-            } else if (op === 'update') {
-                url = `/api/employees/${id}`;
-                method = 'PUT';
-                body = { lib: name };
-            } else if (op === 'delete') {
-                url = `/api/employees/${id}`;
-                method = 'DELETE';
-            }
-
-            const options = { method };
-            if (body) options.headers = { 'Content-Type': 'application/json' };
-            if (body) options.body = JSON.stringify(body);
-
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('employeeResponse', 'employeeStatus', 'employeeContent', data.success, data);
-            }).catch(e => {
-                showResponse('employeeResponse', 'employeeStatus', 'employeeContent', false, { message: e.message });
-            });
+        if (!esId || !clientId) {
+            log('Please fill all fields', true);
+            return;
         }
 
-        function executeClientRequest() {
-            const op = document.getElementById('clientOp').value;
-            const id = document.getElementById('clientId').value;
-            const name = document.getElementById('clientName').value;
-            const phone = document.getElementById('clientPhone').value;
+        fetch(`${API_BASE}/rendezvous`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idES: parseInt(esId), idC: parseInt(clientId) })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            let url, method, body;
+    function createNotification() {
+        const rvId = document.getElementById('notifRVId').value;
+        const type = document.getElementById('notifType').value;
 
-            if (op === 'get') {
-                url = `/api/clients/${id}`;
-                method = 'GET';
-            } else if (op === 'create') {
-                url = `/api/clients`;
-                method = 'POST';
-                body = { lib: name, number: phone };
-            } else if (op === 'update') {
-                url = `/api/clients/${id}`;
-                method = 'PUT';
-                body = { lib: name, number: phone };
-            } else if (op === 'delete') {
-                url = `/api/clients/${id}`;
-                method = 'DELETE';
-            }
-
-            const options = { method };
-            if (body) options.headers = { 'Content-Type': 'application/json' };
-            if (body) options.body = JSON.stringify(body);
-
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('clientResponse', 'clientStatus', 'clientContent', data.success, data);
-            }).catch(e => {
-                showResponse('clientResponse', 'clientStatus', 'clientContent', false, { message: e.message });
-            });
+        if (!rvId) {
+            log('Please enter Rendez-vous ID', true);
+            return;
         }
 
-        function executeESRequest() {
-            const op = document.getElementById('esOp').value;
-            const id = document.getElementById('esId').value;
-            const empId = document.getElementById('esEmployeeId').value;
-            const srvId = document.getElementById('esServiceId').value;
-            const date = document.getElementById('esDate').value;
-            const start = document.getElementById('esStart').value;
-            const end = document.getElementById('esEnd').value;
-            const x2 = document.getElementById('esX2').value === 'true';
+        fetch(`${API_BASE}/notifications`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idR: parseInt(rvId), type: type })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
 
-            let url, method, body;
+    function deleteAllServices() { if (confirm('Delete all services?')) fetch(`${API_BASE}/services/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllEmployees() { if (confirm('Delete all employees?')) fetch(`${API_BASE}/employees/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllClients() { if (confirm('Delete all clients?')) fetch(`${API_BASE}/clients/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllES() { if (confirm('Delete all timeslots?')) fetch(`${API_BASE}/es/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllRendezVous() { if (confirm('Delete all rendez-vous?')) fetch(`${API_BASE}/rendezvous/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllNotifications() { if (confirm('Delete all notifications?')) fetch(`${API_BASE}/notifications/clear`, { method: 'DELETE' }).then(() => refreshData()); }
 
-            if (op === 'get') {
-                url = `/api/es/${id}`;
-                method = 'GET';
-            } else if (op === 'create') {
-                url = `/api/es`;
-                method = 'POST';
-                body = { idE: parseInt(empId), idS: parseInt(srvId), date, start, end, x2 };
-            } else if (op === 'update') {
-                url = `/api/es/${id}`;
-                method = 'PUT';
-                body = { idE: empId ? parseInt(empId) : null, idS: srvId ? parseInt(srvId) : null, date: date || null, start: start || null, end: end || null, x2 };
-            } else if (op === 'delete') {
-                url = `/api/es/${id}`;
-                method = 'DELETE';
-            }
+    function openClearDBModal() {
+        document.getElementById('clearDBModal').classList.add('show');
+    }
 
-            const options = { method };
-            if (body) options.headers = { 'Content-Type': 'application/json' };
-            if (body) options.body = JSON.stringify(body);
+    function closeClearDBModal() {
+        document.getElementById('clearDBModal').classList.remove('show');
+    }
 
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('esResponse', 'esStatus', 'esContent', data.success, data);
-            }).catch(e => {
-                showResponse('esResponse', 'esStatus', 'esContent', false, { message: e.message });
-            });
+    function confirmClearDB() {
+        fetch(`${API_BASE}/clear-db`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: true })
+        })
+        .then(r => r.json())
+        .then(data => {
+            log(JSON.stringify(data, null, 2));
+            closeClearDBModal();
+            refreshData();
+        })
+        .catch(e => log('Error: ' + e.message, true));
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('clearDBModal');
+        if (event.target === modal) {
+            closeClearDBModal();
         }
-
-        function executeRVRequest() {
-            const op = document.getElementById('rvOp').value;
-            const id = document.getElementById('rvId').value;
-            const esId = document.getElementById('rvEsId').value;
-            const clientId = document.getElementById('rvClientId').value;
-            const cancelledBy = document.getElementById('rvCancelledBy').value;
-
-            let url, method, body;
-
-            if (op === 'book') {
-                url = `/api/rendezvous/book?employeeServiceId=${esId}&clientId=${clientId}`;
-                method = 'POST';
-            } else if (op === 'cancel') {
-                url = `/api/rendezvous/${id}/cancel?cancelledBy=${cancelledBy}`;
-                method = 'PUT';
-            } else if (op === 'get') {
-                url = `/api/rendezvous/${id}`;
-                method = 'GET';
-            } else if (op === 'update') {
-                url = `/api/rendezvous/${id}`;
-                method = 'PUT';
-                body = {};
-            } else if (op === 'delete') {
-                url = `/api/rendezvous/${id}`;
-                method = 'DELETE';
-            }
-
-            const options = { method };
-            if (body !== undefined) {
-                options.headers = { 'Content-Type': 'application/json' };
-                options.body = JSON.stringify(body);
-            }
-
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('rvResponse', 'rvStatus', 'rvContent', data.success, data);
-            }).catch(e => {
-                showResponse('rvResponse', 'rvStatus', 'rvContent', false, { message: e.message });
-            });
-        }
-
-        function executeNotificationRequest() {
-            const op = document.getElementById('notificationOp').value;
-            const id = document.getElementById('notificationId').value;
-            const rvId = document.getElementById('notificationRvId').value;
-            const type = document.getElementById('notificationType').value;
-            const value = document.getElementById('notificationValue').value;
-
-            let url, method, body;
-
-            if (op === 'create') {
-                url = `/api/notifications`;
-                method = 'POST';
-                body = { idR: parseInt(rvId), type, value };
-            } else if (op === 'get') {
-                url = `/api/notifications/${id}`;
-                method = 'GET';
-            } else if (op === 'delete') {
-                url = `/api/notifications/${id}`;
-                method = 'DELETE';
-            }
-
-            const options = { method };
-            if (body) {
-                options.headers = { 'Content-Type': 'application/json' };
-                options.body = JSON.stringify(body);
-            }
-
-            fetch(url, options).then(r => r.json()).then(data => {
-                showResponse('notificationResponse', 'notificationStatus', 'notificationContent', data.success, data);
-            }).catch(e => {
-                showResponse('notificationResponse', 'notificationStatus', 'notificationContent', false, { message: e.message });
-            });
-        }
-
-        function showConfirmation(title, message, action) {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMessage').textContent = message;
-            pendingAction = action;
-            document.getElementById('confirmModal').classList.add('show');
-        }
-
-        function confirmAction() {
-            document.getElementById('confirmModal').classList.remove('show');
-            if (pendingAction) {
-                pendingAction();
-            }
-        }
-
-        function cancelAction() {
-            document.getElementById('confirmModal').classList.remove('show');
-            pendingAction = null;
-        }
-
-        function deleteAllNotifications() {
-            showConfirmation('Delete All Notifications', 'This will delete ALL notification records. This action cannot be undone!', () => {
-                fetch('/api/notifications').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(n => fetch(`/api/notifications/${n.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All notifications deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function deleteAllRendezvous() {
-            showConfirmation('Delete All Rendezvous', 'This will delete ALL rendezvous records. This action cannot be undone!', () => {
-                fetch('/api/rendezvous').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(rv => fetch(`/api/rendezvous/${rv.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All rendezvous deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function deleteAllES() {
-            showConfirmation('Delete All Employee Services', 'This will delete ALL employee service records. This action cannot be undone!', () => {
-                fetch('/api/es').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(es => fetch(`/api/es/${es.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All employee services deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function deleteAllClients() {
-            showConfirmation('Delete All Clients', 'This will delete ALL client records. This action cannot be undone!', () => {
-                fetch('/api/clients').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(c => fetch(`/api/clients/${c.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All clients deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function deleteAllEmployees() {
-            showConfirmation('Delete All Employees', 'This will delete ALL employee records. This action cannot be undone!', () => {
-                fetch('/api/employees').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(e => fetch(`/api/employees/${e.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All employees deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function deleteAllServices() {
-            showConfirmation('Delete All Services', 'This will delete ALL service records. This action cannot be undone!', () => {
-                fetch('/api/services').then(r => r.json()).then(data => {
-                    Promise.all(data.data.map(s => fetch(`/api/services/${s.id}`, { method: 'DELETE' })))
-                        .then(() => {
-                            showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'All services deleted' });
-                            refreshAllData();
-                        });
-                });
-            });
-        }
-
-        function clearDatabase() {
-            showConfirmation('⚠️ CLEAR ENTIRE DATABASE', 'This will DELETE ALL DATA from the database. This action CANNOT BE UNDONE and will permanently delete all services, employees, clients, timeslots, bookings, and notifications. Are you absolutely sure?', () => {
-                Promise.all([
-                    fetch('/api/notifications').then(r => r.json()).then(data => Promise.all(data.data.map(n => fetch(`/api/notifications/${n.id}`, { method: 'DELETE' })))),
-                    fetch('/api/rendezvous').then(r => r.json()).then(data => Promise.all(data.data.map(rv => fetch(`/api/rendezvous/${rv.id}`, { method: 'DELETE' })))),
-                    fetch('/api/es').then(r => r.json()).then(data => Promise.all(data.data.map(es => fetch(`/api/es/${es.id}`, { method: 'DELETE' })))),
-                    fetch('/api/clients').then(r => r.json()).then(data => Promise.all(data.data.map(c => fetch(`/api/clients/${c.id}`, { method: 'DELETE' })))),
-                    fetch('/api/employees').then(r => r.json()).then(data => Promise.all(data.data.map(e => fetch(`/api/employees/${e.id}`, { method: 'DELETE' })))),
-                    fetch('/api/services').then(r => r.json()).then(data => Promise.all(data.data.map(s => fetch(`/api/services/${s.id}`, { method: 'DELETE' }))))
-                ]).then(() => {
-                    showResponse('adminResponse', 'adminStatus', 'adminContent', true, { message: 'DATABASE CLEARED - All data has been permanently deleted' });
-                    refreshAllData();
-                });
-            });
-        }
-
-        // Initial load
-        refreshAllData();
-    </script>
+    }
+</script>
 </body>
 </html>
-

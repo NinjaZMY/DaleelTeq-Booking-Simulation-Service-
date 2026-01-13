@@ -3,96 +3,156 @@ package com.daleelteq.booking.service;
 import com.daleelteq.booking.domain.Service;
 import com.daleelteq.booking.dto.ServiceDto;
 import com.daleelteq.booking.exception.EntityNotFoundException;
-import com.daleelteq.booking.exception.ValidationException;
 import com.daleelteq.booking.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Slf4j
+@org.springframework.stereotype.Service
 @RequiredArgsConstructor
+@Transactional
 public class ServiceService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServiceService.class);
     private final ServiceRepository serviceRepository;
 
-    @Transactional(readOnly = true)
+    /**
+     * Get all services
+     */
     public List<ServiceDto> getAllServices() {
-        logger.info("Fetching all services");
+        log.debug("Fetching all services");
         return serviceRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get service by ID
+     */
     public ServiceDto getServiceById(Long id) {
-        logger.info("Fetching service with id: {}", id);
+        log.debug("Fetching service with id: {}", id);
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Service", id));
-        return convertToDto(service);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableServiceIds();
+                    log.warn("Service not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Service with id %d not found. Available service ids: %s", id, availableIds)
+                    );
+                });
+        return toDto(service);
     }
 
-    @Transactional
+    /**
+     * Create new service
+     */
     public ServiceDto createService(ServiceDto dto) {
-        validateTimeValue(dto.getTimeValue());
-        logger.info("Creating service: {}", dto.getLib());
-        
+        log.info("Creating new service: {}", dto.getLib());
+
+        // Validate time value
+        if (dto.getTimeValue() == null || !isValidTimeValue(dto.getTimeValue())) {
+            throw new IllegalArgumentException(
+                    "Invalid timeValue. Allowed values: [15, 20, 25, 30]. Provided: " + dto.getTimeValue()
+            );
+        }
+
         Service service = Service.builder()
                 .lib(dto.getLib())
                 .timeValue(dto.getTimeValue())
                 .build();
-        
+
         Service saved = serviceRepository.save(service);
-        logger.info("Service created with id: {}", saved.getId());
-        return convertToDto(saved);
+        log.info("Service created successfully with id: {}", saved.getId());
+        return toDto(saved);
     }
 
-    @Transactional
+    /**
+     * Update service
+     */
     public ServiceDto updateService(Long id, ServiceDto dto) {
-        validateTimeValue(dto.getTimeValue());
-        logger.info("Updating service with id: {}", id);
-        
+        log.info("Updating service with id: {}", id);
+
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Service", id));
-        
-        service.setLib(dto.getLib());
-        service.setTimeValue(dto.getTimeValue());
-        
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableServiceIds();
+                    log.warn("Service not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Service with id %d not found. Available service ids: %s", id, availableIds)
+                    );
+                });
+
+        if (dto.getLib() != null) {
+            service.setLib(dto.getLib());
+        }
+        if (dto.getTimeValue() != null) {
+            if (!isValidTimeValue(dto.getTimeValue())) {
+                throw new IllegalArgumentException(
+                        "Invalid timeValue. Allowed values: [15, 20, 25, 30]. Provided: " + dto.getTimeValue()
+                );
+            }
+            service.setTimeValue(dto.getTimeValue());
+        }
+
         Service updated = serviceRepository.save(service);
-        logger.info("Service updated with id: {}", id);
-        return convertToDto(updated);
+        log.info("Service updated successfully with id: {}", updated.getId());
+        return toDto(updated);
     }
 
-    @Transactional
+    /**
+     * Delete service
+     */
     public void deleteService(Long id) {
-        logger.info("Deleting service with id: {}", id);
-        
+        log.info("Deleting service with id: {}", id);
+
         if (!serviceRepository.existsById(id)) {
-            throw new EntityNotFoundException("Service", id);
+            String availableIds = getAvailableServiceIds();
+            log.warn("Service not found with id: {}. Available ids: {}", id, availableIds);
+            throw new EntityNotFoundException(
+                    String.format("Service with id %d not found. Available service ids: %s", id, availableIds)
+            );
         }
-        
+
         serviceRepository.deleteById(id);
-        logger.info("Service deleted with id: {}", id);
+        log.info("Service deleted successfully with id: {}", id);
     }
 
-    private void validateTimeValue(Integer timeValue) {
-        if (timeValue == null || (!timeValue.equals(15) && !timeValue.equals(20) && !timeValue.equals(25) && !timeValue.equals(30))) {
-            throw new ValidationException("timeValue", "ALLOWED_VALUES", 
-                    "Time value must be one of: 15, 20, 25, 30. Provided: " + timeValue);
-        }
+    /**
+     * Delete all services
+     */
+    public void deleteAllServices() {
+        log.warn("Deleting all services");
+        serviceRepository.deleteAll();
+        log.info("All services deleted");
     }
 
-    private ServiceDto convertToDto(Service service) {
+    /**
+     * Helper method to validate time value
+     */
+    private boolean isValidTimeValue(Integer timeValue) {
+        return timeValue != null && (timeValue == 15 || timeValue == 20 || timeValue == 25 || timeValue == 30);
+    }
+
+    /**
+     * Helper method to get available service IDs for error messages
+     */
+    private String getAvailableServiceIds() {
+        return serviceRepository.findAll().stream()
+                .map(s -> String.valueOf(s.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Convert entity to DTO
+     */
+    private ServiceDto toDto(Service service) {
         return ServiceDto.builder()
                 .id(service.getId())
                 .lib(service.getLib())
                 .timeValue(service.getTimeValue())
+                .createdAt(service.getCreatedAt())
                 .build();
     }
 }
-

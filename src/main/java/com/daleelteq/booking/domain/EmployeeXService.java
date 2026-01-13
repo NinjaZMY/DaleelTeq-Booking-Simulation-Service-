@@ -4,14 +4,16 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
- * RendezVous Entity (R)
- * Represents actual bookings linking a client to a timeslot (ES).
- * Created when a free ES is booked by a client.
+ * EmployeeXService Entity (ES)
+ * Represents available timeslots for employee-service combinations.
+ * Each row is a timeslot that can be booked (status='taken') or remains free.
  */
 @Entity
-@Table(name = "rendez_vous")
+@Table(name = "employee_x_services")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,19 +21,34 @@ import java.time.Instant;
 @Builder
 @EqualsAndHashCode(exclude = {"createdAt", "updatedAt"})
 @ToString(exclude = {"createdAt", "updatedAt"})
-public class RendezVous {
+public class EmployeeXService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_es", nullable = false)
-    private Long idES;
+    @Column(name = "id_e", nullable = false)
+    private Long idE;
 
-    @Column(name = "id_c", nullable = false)
-    private Long idC;
+    @Column(name = "id_s", nullable = false)
+    private Long idS;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
+    private Boolean x2;
+
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @Column(nullable = false)
+    private LocalTime start;
+
+    @Column(nullable = false)
+    private LocalTime end;
+
+    @Column(nullable = false)
+    private Integer timeValue;
+
+    @Column(nullable = false, length = 20)
     private String status;
 
     @Column(nullable = false, updatable = false)

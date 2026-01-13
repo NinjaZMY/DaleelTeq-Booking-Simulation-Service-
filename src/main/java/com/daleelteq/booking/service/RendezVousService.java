@@ -1,185 +1,219 @@
 package com.daleelteq.booking.service;
 
-import com.daleelteq.booking.domain.RendezVous;
-import com.daleelteq.booking.domain.EmployeeService;
-import com.daleelteq.booking.domain.Client;
+import com.daleelteq.booking.domain.EmployeeXService;
 import com.daleelteq.booking.domain.Notification;
+import com.daleelteq.booking.domain.RendezVous;
 import com.daleelteq.booking.dto.RendezVousDto;
-import com.daleelteq.booking.dto.NotificationDto;
 import com.daleelteq.booking.exception.EntityNotFoundException;
-import com.daleelteq.booking.exception.BusinessRuleException;
-import com.daleelteq.booking.repository.RendezVousRepository;
-import com.daleelteq.booking.repository.EmployeeServiceRepository;
-import com.daleelteq.booking.repository.ClientRepository;
+import com.daleelteq.booking.exception.ValidationException;
+import com.daleelteq.booking.repository.EmployeeXServiceRepository;
 import com.daleelteq.booking.repository.NotificationRepository;
+import com.daleelteq.booking.repository.RendezVousRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RendezVousService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RendezVousService.class);
     private final RendezVousRepository rendezVousRepository;
-    private final EmployeeServiceRepository employeeServiceRepository;
-    private final ClientRepository clientRepository;
+    private final EmployeeXServiceRepository esRepository;
     private final NotificationRepository notificationRepository;
 
-    @Transactional(readOnly = true)
+    /**
+     * Get all rendez-vous
+     */
     public List<RendezVousDto> getAllRendezVous() {
-        logger.info("Fetching all rendezvous");
+        log.debug("Fetching all rendez-vous");
         return rendezVousRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get rendez-vous by ID
+     */
     public RendezVousDto getRendezVousById(Long id) {
-        logger.info("Fetching rendezvous with id: {}", id);
+        log.debug("Fetching rendez-vous with id: {}", id);
         RendezVous rv = rendezVousRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("RendezVous", id));
-        return convertToDto(rv);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableRendezVousIds();
+                    log.warn("Rendez-vous not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Rendez-vous with id %d not found. Available rendez-vous ids: %s", id, availableIds)
+                    );
+                });
+        return toDto(rv);
     }
 
+    /**
+     * Book a timeslot (create rendez-vous)
+     * Automatically creates a Notification with type='booked'
+     */
     @Transactional
-    public RendezVousDto bookRendezVous(Long employeeServiceId, Long clientId) {
-        logger.info("Booking rendezvous for ES id: {}, Client id: {}", employeeServiceId, clientId);
-        
-        // Validate EmployeeService exists
-        EmployeeService es = employeeServiceRepository.findById(employeeServiceId)
-                .orElseThrow(() -> new EntityNotFoundException("EmployeeService", employeeServiceId));
-        
-        // Validate Client exists
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new EntityNotFoundException("Client", clientId));
-        
-        // Validate ES is free
-        if (!"free".equalsIgnoreCase(es.getStatus())) {
-            List<Long> freeIds = employeeServiceRepository.findAllFree().stream()
-                    .map(EmployeeService::getId)
+    public RendezVousDto bookRendezVous(Long esId, Long clientId) {
+        log.info("Booking rendez-vous for ES id: {}, Client id: {}", esId, clientId);
+
+        // Validate ES exists and is free
+        EmployeeXService es = esRepository.findById(esId)
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableESIds();
+                    log.warn("ES not found with id: {}. Available ids: {}", esId, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("ES with id %d not found. Available ES ids: %s", esId, availableIds)
+                    );
+                });
+
+        if (!"free".equals(es.getStatus())) {
+            List<Long> availableFreeESIds = esRepository.findByStatus("free").stream()
+                    .map(EmployeeXService::getId)
                     .collect(Collectors.toList());
-            throw new BusinessRuleException("ES_STATUS", 
-                    "Employee service is not available (status: " + es.getStatus() + "). Available slot IDs: " + freeIds);
+            log.warn("ES id: {} is not free. Available free ES ids: {}", esId, availableFreeESIds);
+            throw new ValidationException(
+                    String.format("Timeslot ES id %d is already taken. Available free ES ids: %s", esId, availableFreeESIds)
+            );
         }
-        
-        // Create RendezVous with status "Active"
+
+        // Create RendezVous
         RendezVous rv = RendezVous.builder()
-                .employeeService(es)
-                .client(client)
+                .idES(esId)
+                .idC(clientId)
                 .status("Active")
                 .build();
-        
-        RendezVous savedRv = rendezVousRepository.save(rv);
-        logger.info("RendezVous created with id: {}", savedRv.getId());
-        
-        // Set EmployeeService status to "taken"
+
+        RendezVous saved = rendezVousRepository.save(rv);
+
+        // Update ES status to 'taken'
         es.setStatus("taken");
-        employeeServiceRepository.save(es);
-        logger.info("EmployeeService id {} status set to 'taken'", employeeServiceId);
-        
-        // Create Notification
+        esRepository.save(es);
+
+        // Create Notification for booking
         Notification notification = Notification.builder()
-                .rendezVous(savedRv)
+                .idR(saved.getId())
                 .type("booked")
-                .value("Appointment booked successfully. Status: " + savedRv.getStatus() + (es.getX2() ? " (double duration)" : ""))
+                .value("Active")
+                .x2(es.getX2())
+                .timeValue(es.getTimeValue())
                 .build();
-        
         notificationRepository.save(notification);
-        logger.info("Notification created for RendezVous id: {}", savedRv.getId());
-        
-        return convertToDto(savedRv);
+
+        log.info("Rendez-vous booked successfully with id: {}. ES id: {} marked as 'taken'", saved.getId(), esId);
+        return toDto(saved);
     }
 
+    /**
+     * Cancel a rendez-vous
+     * Updates ES status back to 'free' and creates a Notification with type='cancelled'
+     */
     @Transactional
-    public RendezVousDto cancelRendezVous(Long rendezVousId, String cancelledBy) {
-        logger.info("Cancelling rendezvous id: {} by: {}", rendezVousId, cancelledBy);
-        
-        RendezVous rv = rendezVousRepository.findById(rendezVousId)
-                .orElseThrow(() -> new EntityNotFoundException("RendezVous", rendezVousId));
-        
-        // Check if already cancelled
-        if (rv.getStatus().contains("Cancelled")) {
-            throw new BusinessRuleException("RV_STATUS", "RendezVous is already cancelled");
-        }
-        
-        // Determine status based on who cancelled
-        String newStatus = "Client".equalsIgnoreCase(cancelledBy) ? 
-                "Cancelled by Client" : "Cancelled by Employee";
-        
-        rv.setStatus(newStatus);
-        rv.setCancelledAt(java.time.LocalDateTime.now());
-        
-        RendezVous updatedRv = rendezVousRepository.save(rv);
-        logger.info("RendezVous id {} cancelled by: {}", rendezVousId, cancelledBy);
-        
-        // Set related EmployeeService status back to "free"
-        EmployeeService es = rv.getEmployeeService();
-        es.setStatus("free");
-        employeeServiceRepository.save(es);
-        logger.info("EmployeeService id {} status set back to 'free'", es.getId());
-        
-        // Create Notification inheriting the cancellation status
-        Notification notification = Notification.builder()
-                .rendezVous(updatedRv)
-                .type("cancelled")
-                .value("Appointment " + newStatus + ". Reason inherited from cancellation.")
-                .build();
-        
-        notificationRepository.save(notification);
-        logger.info("Cancellation notification created for RendezVous id: {}", rendezVousId);
-        
-        return convertToDto(updatedRv);
-    }
+    public RendezVousDto cancelRendezVous(Long id, String cancelledBy) {
+        log.info("Cancelling rendez-vous with id: {} by {}", id, cancelledBy);
 
-    @Transactional
-    public RendezVousDto updateRendezVous(Long id, RendezVousDto dto) {
-        logger.info("Updating rendezvous with id: {}", id);
-        
         RendezVous rv = rendezVousRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("RendezVous", id));
-        
-        if (dto.getIdC() != null) {
-            Client client = clientRepository.findById(dto.getIdC())
-                    .orElseThrow(() -> new EntityNotFoundException("Client", dto.getIdC()));
-            rv.setClient(client);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableRendezVousIds();
+                    log.warn("Rendez-vous not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Rendez-vous with id %d not found. Available rendez-vous ids: %s", id, availableIds)
+                    );
+                });
+
+        if (rv.getStatus().contains("Cancelled")) {
+            log.warn("Rendez-vous id: {} is already cancelled", id);
+            throw new ValidationException(
+                    String.format("Rendez-vous id %d is already cancelled with status: %s", id, rv.getStatus())
+            );
         }
-        
-        if (dto.getStatus() != null) {
-            rv.setStatus(dto.getStatus());
-        }
-        
+
+        String newStatus = "Cancelled by " + cancelledBy;
+        rv.setStatus(newStatus);
         RendezVous updated = rendezVousRepository.save(rv);
-        logger.info("RendezVous updated with id: {}", id);
-        return convertToDto(updated);
+
+        // Set ES back to 'free'
+        EmployeeXService es = esRepository.findById(rv.getIdES())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("ES with id %d not found", rv.getIdES())
+                ));
+        es.setStatus("free");
+        esRepository.save(es);
+
+        // Create Notification for cancellation
+        Notification notification = Notification.builder()
+                .idR(updated.getId())
+                .type("cancelled")
+                .value(newStatus)
+                .x2(es.getX2())
+                .timeValue(es.getTimeValue())
+                .build();
+        notificationRepository.save(notification);
+
+        log.info("Rendez-vous id: {} cancelled successfully. ES id: {} marked as 'free'. Status: {}", id, rv.getIdES(), newStatus);
+        return toDto(updated);
     }
 
-    @Transactional
+    /**
+     * Delete rendez-vous
+     */
     public void deleteRendezVous(Long id) {
-        logger.info("Deleting rendezvous with id: {}", id);
-        
+        log.info("Deleting rendez-vous with id: {}", id);
+
         if (!rendezVousRepository.existsById(id)) {
-            throw new EntityNotFoundException("RendezVous", id);
+            String availableIds = getAvailableRendezVousIds();
+            log.warn("Rendez-vous not found with id: {}. Available ids: {}", id, availableIds);
+            throw new EntityNotFoundException(
+                    String.format("Rendez-vous with id %d not found. Available rendez-vous ids: %s", id, availableIds)
+            );
         }
-        
+
         rendezVousRepository.deleteById(id);
-        logger.info("RendezVous deleted with id: {}", id);
+        log.info("Rendez-vous deleted successfully with id: {}", id);
     }
 
-    private RendezVousDto convertToDto(RendezVous rv) {
+    /**
+     * Delete all rendez-vous
+     */
+    public void deleteAllRendezVous() {
+        log.warn("Deleting all rendez-vous");
+        rendezVousRepository.deleteAll();
+        log.info("All rendez-vous deleted");
+    }
+
+    /**
+     * Helper method to get available Rendez-vous IDs for error messages
+     */
+    private String getAvailableRendezVousIds() {
+        return rendezVousRepository.findAll().stream()
+                .map(rv -> String.valueOf(rv.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Helper method to get available ES IDs for error messages
+     */
+    private String getAvailableESIds() {
+        return esRepository.findAll().stream()
+                .map(es -> String.valueOf(es.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Convert entity to DTO
+     */
+    private RendezVousDto toDto(RendezVous rv) {
         return RendezVousDto.builder()
                 .id(rv.getId())
-                .idEs(rv.getEmployeeService().getId())
-                .idC(rv.getClient().getId())
+                .idES(rv.getIdES())
+                .idC(rv.getIdC())
                 .status(rv.getStatus())
                 .createdAt(rv.getCreatedAt())
-                .cancelledAt(rv.getCancelledAt())
+                .updatedAt(rv.getUpdatedAt())
                 .build();
     }
 }
-

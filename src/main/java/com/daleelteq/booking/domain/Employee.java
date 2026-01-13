@@ -1,30 +1,37 @@
 package com.daleelteq.booking.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.Instant;
 
 /**
- * E (Employees) - Represents an employee
+ * Employee Entity (E)
+ * Defines employees who provide services via timeslots.
  */
 @Entity
 @Table(name = "employees")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(exclude = {"createdAt"})
+@ToString(exclude = {"createdAt"})
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
-    private String lib; // Employee name
+    @Column(nullable = false, unique = true, length = 255)
+    private String lib;
 
-    @Version
-    private Long version;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
 }
-

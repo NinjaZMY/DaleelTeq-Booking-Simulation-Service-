@@ -1,48 +1,58 @@
 erDiagram
+    %% Service defines available appointment types
     S ||--o{ ES : "defines"
+    %% Employee provides services via timeslots
     E ||--o{ ES : "works"
+    %% ES (timeslot) becomes a Rendez-vous when booked
     ES ||--o| R : "becomes a"
+    %% Client books Rendez-vous
     C ||--o{ R : "books"
+    %% Rendez-vous triggers Notifications
     R ||--o{ N : "triggers"
 
     S {
-        int id PK "S.id"
-        string lib "Service Name"
-        int time_value "Base Duration [15, 20, 25, 30] mins"
+        BIGSERIAL id PK "Primary Key"
+        VARCHAR lib "Service Name/Label"
+        INT time_value "Base Duration [15, 20, 25, 30] minutes"
     }
 
     E {
-        int id PK "E.id"
-        string lib "Employee Name"
+        BIGSERIAL id PK "Primary Key"
+        VARCHAR lib "Employee Name/Label"
     }
 
     C {
-        int id PK "C.id"
-        string lib "Client Name"
-        string number "Phone Number"
+        BIGSERIAL id PK "Primary Key"
+        VARCHAR lib "Client Name/Label"
+        VARCHAR number "Phone Number"
     }
 
     ES {
-        int id PK "Appointment ID (Timeslot)"
-        int id_E FK "Employee ID"
-        int id_S FK "Service ID"
-        boolean X_2 "0=Single, 1=Double Duration"
-        time start "HH:mm"
-        time end "HH:mm"
-        date date "YYYY/MM/DD"
-        string status "e.g., 'taken', 'free'"
+        BIGSERIAL id PK "Timeslot ID"
+        BIGINT id_e FK "Employee ID (FK to E)"
+        BIGINT id_s FK "Service ID (FK to S)"
+        BOOLEAN x_2 "false=Single Duration; true=Double Duration"
+        DATE date "YYYY-MM-DD (required)"
+        TIME start "HH:mm (within 09:00-16:00 window)"
+        TIME end "HH:mm (computed: start + time_value minutes)"
+        INT time_value "Persisted Duration in minutes (service.time_value * (x_2 ? 2 : 1))"
+        VARCHAR status "'free' (available) or 'taken' (booked)"
     }
 
     R {
-        int id PK "Rendez-vous ID"
-        int id_ES FK "Linked Timeslot ID"
-        int id_C FK "Client ID"
-        string status "Active, Cancelled by C, Cancelled by E"
+        BIGSERIAL id PK "Rendez-vous ID"
+        BIGINT id_es FK "Timeslot ID (FK to ES) - Java: idES"
+        BIGINT id_c FK "Client ID (FK to C) - Java: idC"
+        VARCHAR status "'Active', 'Cancelled by Client', or 'Cancelled by Employee'"
+        TIMESTAMP created_at "Booking creation timestamp"
     }
 
     N {
-        int id PK "Notification ID"
-        int id_R FK "Rendez-vous Reference"
-        string type "booking or cancelled"
-        string value "Inherits R.status"
+        BIGSERIAL id PK "Notification ID"
+        BIGINT id_r FK "Rendez-vous ID (FK to R)"
+        VARCHAR type "'booked' or 'cancelled'"
+        VARCHAR value "Inherits R.status at notification time"
+        BOOLEAN x_2 "Snapshot of ES.x_2 at booking/cancellation"
+        INT time_value "Snapshot of ES.time_value at booking/cancellation"
+        TIMESTAMP created_at "Notification creation timestamp"
     }

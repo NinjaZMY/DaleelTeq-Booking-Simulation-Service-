@@ -1,47 +1,50 @@
 package com.daleelteq.booking.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.*;
+
+import java.time.Instant;
 
 /**
- * N (ES_Notification) - Represents a notification event
- * Created when a rendez_vous is booked or cancelled
+ * Notification Entity (N)
+ * Audit trail for booking/cancellation events.
+ * Stores snapshots of x_2 and time_value at the time of notification.
  */
 @Entity
-@Table(name = "notifications")
-@Data
+@Table(name = "es_notification")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(exclude = {"createdAt"})
+@ToString(exclude = {"createdAt"})
 public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_r", nullable = false)
-    private RendezVous rendezVous;
+    @Column(name = "id_r", nullable = false)
+    private Long idR;
 
-    @Column(nullable = false, length = 100)
-    private String type; // "booked", "cancelled"
+    @Column(nullable = false, length = 20)
+    private String type;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String value; // Inherits rendez_vous status
+    @Column(nullable = false, length = 50)
+    private String value;
+
+    @Column(nullable = false)
+    private Boolean x2;
+
+    @Column(nullable = false)
+    private Integer timeValue;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Version
-    private Long version;
+    private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }
-

@@ -1,699 +1,478 @@
-# DaleelTeq Booking Service - REST API Backend
+# DaleelTeq Booking Simulation Service
 
-A fully functional Spring Boot 4 application (Java 25) implementing a complete employee-service-client booking and reservation system with PostgreSQL backend.
+A Spring Boot 4 REST API for managing appointment bookings with employee scheduling, timeslots, and client notifications.
 
 ## 📋 Table of Contents
 
 - [Features](#features)
-- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
 - [Database Setup](#database-setup)
-- [Configuration](#configuration)
 - [Running the Application](#running-the-application)
 - [API Endpoints](#api-endpoints)
+- [Environment Configuration](#environment-configuration)
 - [Testing](#testing)
-- [Data Model](#data-model)
-- [Error Handling](#error-handling)
-- [Logging](#logging)
-
----
 
 ## ✨ Features
 
-### Core Functionality
-- ✅ Complete CRUD operations for all entities (S, E, C, ES, R, N)
-- ✅ Dual endpoint variants: path-id (`/api/entity/{id}`) and JSON-body (`/api/entity`)
-- ✅ Transactional booking workflow: ES status management + Notification creation
-- ✅ Transactional cancellation: ES status reset + Notification with cancellation reason
-- ✅ Precise validation with detailed error messages for each failing field
-- ✅ Available IDs returned in error responses for easy testing
+- **Service Management**: Define available services with configurable durations (15, 20, 25, 30 minutes)
+- **Employee Management**: Manage employees and their schedules
+- **Client Management**: Register and manage clients
+- **Timeslot Management (ES)**: Create employee-service timeslots with date/time validation
+- **Double Duration Support**: Enable `x_2` flag to double a timeslot's duration
+- **Rendez-vous Booking**: Book appointments linking clients to timeslots
+- **Notification System**: Automatic audit trail of booking/cancellation events
+- **Time Window Validation**: Configurable working hours (default 09:00–16:00)
+- **Comprehensive Error Handling**: Precise, actionable error messages with available IDs
+- **Case-Insensitive Routing**: All routes accept mixed case (e.g., `/api/ES`, `/api/es`)
+- **Hot Reload**: Spring DevTools for instant code changes without restart
+- **Web UI**: Thymeleaf dashboard for testing all operations
+- **Full CRUD**: Complete Create, Read, Update, Delete operations for all entities
 
-### Technical Stack
-- **Java 25** with Maven 4.0.0 Build System
-- **Spring Boot 4.0.0** (Web, Data JPA, Thymeleaf, WebSocket)
-- **PostgreSQL 18** with optimistic locking (@Version)
-- **Lombok** for reduced boilerplate
-- **Testcontainers** with singleton reusable container pattern
-- **Spring DevTools** with LiveReload (hot reload)
-- **.env support** via Java Dotenv (auto-loaded with fallback to OS env vars)
+## 🛠️ Tech Stack
 
-### User Interface
-- **Interactive Thymeleaf dashboard** at `/` for testing all endpoints
-- Real-time entity lists with available IDs
-- Confirmation modals for destructive operations
-- JSON response display with syntax highlighting
-- DeleteAll and ClearDB buttons with safety confirmations
+- **Java 25**
+- **Spring Boot 4.0**
+- **Spring Data JPA**
+- **Spring Web (REST)**
+- **Spring DevTools (Hot Reload)**
+- **PostgreSQL 18**
+- **Lombok**
+- **Thymeleaf**
+- **Maven**
+- **Testcontainers** (for integration tests)
+- **Mockito** (for unit tests)
 
----
+## 📦 Prerequisites
 
-## 📁 Project Structure
+- **Java 25** installed and configured
+- **PostgreSQL 18** installed and running
+- **Maven** (local installation recommended; Maven Wrapper included)
+- **IntelliJ IDEA** (or any IDE with Maven support)
 
-```
-src/main/java/com/daleelteq/booking/
-├── BookingApplication.java                 # Main Spring Boot entry point
-├── config/
-│   ├── WebConfig.java                     # Case-insensitive routing config
-│   └── DotenvEnvironmentPostProcessor.java # .env auto-loader
-├── domain/                                 # JPA Entities
-│   ├── Service.java                       # S (Services)
-│   ├── Employee.java                      # E (Employees)
-│   ├── Client.java                        # C (Clients)
-│   ├── EmployeeService.java               # ES (Employee_x_Services)
-│   ├── RendezVous.java                    # R (Rendez-vous/Bookings)
-│   └── Notification.java                  # N (Notifications)
-├── repository/                             # Spring Data JPA Repositories
-│   ├── ServiceRepository.java
-│   ├── EmployeeRepository.java
-│   ├── ClientRepository.java
-│   ├── EmployeeServiceRepository.java
-│   ├── RendezVousRepository.java
-│   └── NotificationRepository.java
-├── service/                                # Business Logic Services
-│   ├── ServiceService.java
-│   ├── EmployeeService.java
-│   ├── ClientService.java
-│   ├── EmployeeServiceService.java
-│   ├── RendezVousService.java
-│   └── NotificationService.java
-├── controller/
-│   ├── rest/                              # REST API Controllers
-│   │   ├── ServiceRestController.java
-│   │   ├── EmployeeRestController.java
-│   │   ├── ClientRestController.java
-│   │   ├── EmployeeServiceRestController.java
-│   │   ├── RendezVousRestController.java
-│   │   └── NotificationRestController.java
-│   └── web/
-│       └── WebIndexController.java        # Thymeleaf UI Controller
-├── dto/                                    # Data Transfer Objects
-│   ├── ServiceDto.java
-│   ├── EmployeeDto.java
-│   ├── ClientDto.java
-│   ├── EmployeeServiceDto.java
-│   ├── RendezVousDto.java
-│   ├── NotificationDto.java
-│   ├── ApiResponse.java                   # Unified response format
-│   └── IdRequestDto.java                  # Universal request DTO
-└── exception/                              # Exception Handling
-    ├── EntityNotFoundException.java
-    ├── ValidationException.java
-    ├── BusinessRuleException.java
-    └── GlobalExceptionHandler.java
+### Install PostgreSQL 18
 
-src/main/resources/
-├── application.properties                  # Configuration (reads .env)
-├── db/
-│   └── schema-postgres18.sql              # PostgreSQL DDL
-└── templates/
-    └── index.html                         # Interactive Test UI
+#### Windows
+1. Download from [postgresql.org](https://www.postgresql.org/download/windows/)
+2. Run the installer
+3. Note the superuser password
 
-src/test/java/                             # Test Classes (JUnit 5, Mockito, Testcontainers)
-
-.env                                       # Environment variables (gitignored)
-.env.example                               # Template for .env
-.gitignore                                 # Git ignore rules
-pom.xml                                    # Maven configuration (Java 25, Spring Boot 4)
-```
-
----
-
-## 🔧 Prerequisites
-
-### System Requirements
-- **Java 25 JDK** (not JRE) — Download from [oracle.com](https://www.oracle.com/java/technologies/javase/jdk25-archive-downloads.html) or use a package manager
-- **PostgreSQL 18** — [Download](https://www.postgresql.org/download/)
-- **Maven** (optional; project includes Maven Wrapper) — or use IntelliJ IDE's built-in Maven support
-
-### Verify Java Version
+#### macOS
 ```bash
-java -version
-# Should output: java version "25" (or 25.x.x)
+brew install postgresql@18
+brew services start postgresql@18
 ```
 
----
+#### Linux (Ubuntu)
+```bash
+sudo apt update
+sudo apt install postgresql-18
+sudo systemctl start postgresql
+```
 
-## 💾 Database Setup
+## 🚀 Installation & Setup
 
-### Step 1: Create Database and User
+### 1. Clone the Repository
 
-Connect to PostgreSQL as a superuser and execute:
+```bash
+cd /path/to/DaleelTeq-Booking-Simulation-Service
+```
+
+### 2. Create Environment File
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+```env
+DB_USERNAME=booking_user
+DB_PASSWORD=changeme
+```
+
+### 3. Database Setup
+
+#### Step 1: Create Database and User
+
+Connect to PostgreSQL as superuser:
+
+```bash
+psql -U postgres
+```
+
+Then execute:
 
 ```sql
--- Connect as superuser (usually 'postgres')
-psql -U postgres
-
--- Create database
 CREATE DATABASE booking_db;
-
--- Create user
 CREATE USER booking_user WITH PASSWORD 'changeme';
-
--- Grant privileges
 GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
-ALTER DATABASE booking_db OWNER TO booking_user;
-
--- Exit psql
 \q
 ```
 
-### Step 2: Create Tables
-
-The application will automatically create tables on first run (Hibernate `ddl-auto=update`). Alternatively, manually apply the schema:
+#### Step 2: Load Schema
 
 ```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
 ```
 
-### Step 3: Verify Tables
+The schema will:
+- Create all tables with proper constraints
+- Add indexes for performance
+- Insert sample data (4 services, 3 employees, 3 clients)
+
+### 4. Verify Database Connection
 
 ```bash
-psql -U booking_user -d booking_db -c "\dt"
+psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
 
-Expected tables:
-- `services` (S)
-- `employees` (E)
-- `clients` (C)
-- `employee_services` (ES)
-- `rendez_vous` (R)
-- `notifications` (N)
+Expected output: 4 rows
 
----
+## ▶️ Running the Application
 
-## ⚙️ Configuration
-
-### Environment Variables (.env file)
-
-The project reads credentials from `.env` file (created automatically):
-
-```env
-# Database Credentials Template
-DB_USERNAME=booking_user
-DB_PASSWORD=changeme
-DB_URL=jdbc:postgresql://localhost:5432/booking_db
-DB_DRIVER=org.postgresql.Driver
-
-# Application Properties
-APP_NAME=DaleelTeq Booking Service
-APP_PORT=8080
-APP_PROFILE=dev
-```
-
-**Important:** `.env` is in `.gitignore` and will NOT be committed to Git. The `.env.example` file shows the required template.
-
-### Application Properties
-
-File: `src/main/resources/application.properties`
-
-Key settings:
-- **DevTools Hot Reload:** `spring.devtools.restart.enabled=true`
-- **Hibernate DDL:** `spring.jpa.hibernate.ddl-auto=update`
-- **Logging Level:** `logging.level.com.daleelteq.booking=DEBUG`
-- **Thymeleaf Cache:** `spring.thymeleaf.cache=false` (for development)
-
----
-
-## 🚀 Running the Application
-
-### Option 1: IntelliJ IDE (Recommended)
-
-1. **Open Project:**
-   - File → Open → Select project directory
-
-2. **Configure Maven:**
-   - IntelliJ auto-detects Maven; allows running via built-in Maven tools
-
-3. **Set .env in Run Configuration:**
-   - Run → Edit Configurations
-   - Add Environment Variable: `DB_PASSWORD=changeme` (or leave blank to auto-load from .env)
-
-4. **Run:**
-   - Click Run button or press Shift+F10
-   - App starts at `http://localhost:8080`
-
-### Option 2: Command Line
+### Option 1: Using Maven (Recommended)
 
 ```bash
-# Navigate to project root
-cd DaleelTeq-Booking-Simulation-Service-
-
-# Build project (skip tests for first run)
-mvn -DskipTests=false clean package
-
-# Run application
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-Or run the packaged JAR:
+Or on Windows:
+```cmd
+mvnw.cmd spring-boot:run
+```
+
+### Option 2: Using IntelliJ IDEA
+
+1. Open the project in IntelliJ
+2. Right-click `BookingApplication.java`
+3. Select "Run 'BookingApplication.main()'"
+
+### Option 3: Build and Run JAR
 
 ```bash
-java -jar target/booking-service-0.0.1-SNAPSHOT.jar
+./mvnw clean package
+java -jar target/booking-simulation-service-1.0.0.jar
 ```
 
-### Verify Application Started
+## 🌐 Accessing the Application
+
+- **Web UI**: http://localhost:8080
+- **API Base**: http://localhost:8080/api
+- **H2 Console** (if enabled): http://localhost:8080/h2-console
+
+## 📡 API Endpoints
+
+### Services `/api/services`
 
 ```
-[main] o.s.b.w.e.tomcat.TomcatWebServer : Tomcat started on port(s): 8080
+GET    /api/services              - Get all services
+GET    /api/services/{id}         - Get service by ID
+POST   /api/services              - Create service
+PUT    /api/services/{id}         - Update service by path ID
+PUT    /api/services/entity       - Update service by body ID
+DELETE /api/services/{id}         - Delete service
+DELETE /api/services/clear        - Delete all services
 ```
 
-Visit: `http://localhost:8080/`
-
----
-
-## 🔌 API Endpoints
-
-### Base URL
-```
-http://localhost:8080/api
-```
-
-### Case-Insensitive Routing
-All endpoints accept ANY casing: `/api/es`, `/api/ES`, `/api/eS`, etc.
-
-### 1. Services (S)
-
-```http
-GET    /api/services              # List all services
-GET    /api/services/{id}         # Get by ID
-POST   /api/services              # Create (JSON body)
-PUT    /api/services/{id}         # Update by path ID
-PUT    /api/services              # Update by JSON body (include id)
-DELETE /api/services/{id}         # Delete by path ID
-DELETE /api/services              # Delete by JSON body (include id)
-```
-
-**Example Request:** Create Service
+Example POST:
 ```json
-POST /api/services
 {
   "lib": "Haircut",
-  "timeValue": 30
+  "timeValue": 15
 }
 ```
 
-**Example Response:**
+### Employees `/api/employees`
+
+```
+GET    /api/employees             - Get all employees
+GET    /api/employees/{id}        - Get employee by ID
+POST   /api/employees             - Create employee
+PUT    /api/employees/{id}        - Update employee
+PUT    /api/employees/entity      - Update employee by body ID
+DELETE /api/employees/{id}        - Delete employee
+DELETE /api/employees/clear       - Delete all employees
+```
+
+### Clients `/api/clients`
+
+```
+GET    /api/clients               - Get all clients
+GET    /api/clients/{id}          - Get client by ID
+POST   /api/clients               - Create client
+PUT    /api/clients/{id}          - Update client
+PUT    /api/clients/entity        - Update client by body ID
+DELETE /api/clients/{id}          - Delete client
+DELETE /api/clients/clear         - Delete all clients
+```
+
+Example POST:
 ```json
 {
-  "success": true,
-  "message": "Service created successfully",
-  "data": {
-    "id": 1,
-    "lib": "Haircut",
-    "timeValue": 30
-  },
-  "timestamp": "2025-12-20T10:30:00"
+  "lib": "Client Name",
+  "number": "+20123456789"
 }
 ```
 
-### 2. Employees (E)
+### Timeslots (ES) `/api/es`
 
-```http
-GET    /api/employees              # List all
-GET    /api/employees/{id}         # Get by ID
-POST   /api/employees              # Create
-PUT    /api/employees/{id}         # Update by path ID
-PUT    /api/employees              # Update by JSON body
-DELETE /api/employees/{id}         # Delete by path ID
-DELETE /api/employees              # Delete by JSON body
+```
+GET    /api/es                    - Get all timeslots
+GET    /api/es/{id}               - Get timeslot by ID
+POST   /api/es                    - Create timeslot
+PUT    /api/es/{id}               - Update timeslot
+PUT    /api/es/entity             - Update timeslot by body ID
+DELETE /api/es/{id}               - Delete timeslot
+DELETE /api/es/clear              - Delete all timeslots
+GET    /api/es/free/{date}        - Get free timeslots for date
 ```
 
-### 3. Clients (C)
-
-```http
-GET    /api/clients              # List all
-GET    /api/clients/{id}         # Get by ID
-POST   /api/clients              # Create
-PUT    /api/clients/{id}         # Update by path ID
-PUT    /api/clients              # Update by JSON body
-DELETE /api/clients/{id}         # Delete by path ID
-DELETE /api/clients              # Delete by JSON body
-```
-
-### 4. Employee Services (ES) — Timeslots
-
-```http
-GET    /api/es                  # List all
-GET    /api/es/free             # List free slots (available for booking)
-GET    /api/es/{id}             # Get by ID
-POST   /api/es                  # Create
-PUT    /api/es/{id}             # Update by path ID
-PUT    /api/es                  # Update by JSON body
-DELETE /api/es/{id}             # Delete by path ID
-DELETE /api/es                  # Delete by JSON body
-```
-
-**Example Request:** Create Employee Service (Timeslot)
+Example POST:
 ```json
-POST /api/es
 {
   "idE": 1,
   "idS": 1,
-  "date": "2025-12-31",
+  "date": "2026-02-20",
   "start": "09:00",
-  "end": "10:00",
   "x2": false
 }
 ```
 
-### 5. Rendezvous (R) — Bookings
+Server calculates:
+- `end` = start + (serviceTimeValue * (x2 ? 2 : 1))
+- `timeValue` = serviceTimeValue * (x2 ? 2 : 1)
 
-```http
-GET    /api/rendezvous                           # List all
-GET    /api/rendezvous/{id}                      # Get by ID
-POST   /api/rendezvous/book?employeeServiceId=1&clientId=2  # Book appointment
-POST   /api/rendezvous/book-json                 # Book with JSON body
-PUT    /api/rendezvous/{id}                      # Update
-PUT    /api/rendezvous/{id}/cancel?cancelledBy=Client  # Cancel by path
-PUT    /api/rendezvous                           # Update by JSON body
-DELETE /api/rendezvous/{id}                      # Delete by path ID
-DELETE /api/rendezvous                           # Delete by JSON body
+Time validation: start must be between 09:00 and 16:00 - timeValue
+
+### Rendez-vous (Bookings) `/api/rendezvous`
+
+```
+GET    /api/rendezvous            - Get all bookings
+GET    /api/rendezvous/{id}       - Get booking by ID
+POST   /api/rendezvous            - Book appointment
+PATCH  /api/rendezvous/{id}/cancel - Cancel booking
+DELETE /api/rendezvous/{id}       - Delete booking
+DELETE /api/rendezvous/clear      - Delete all bookings
 ```
 
-**Example Request:** Book Appointment
+Example POST (Book):
 ```json
-POST /api/rendezvous/book-json
 {
-  "idEs": 1,
-  "idC": 2
+  "idES": 1,
+  "idC": 1
 }
 ```
 
-**Example Response (Success):**
+Example PATCH (Cancel):
 ```json
 {
-  "success": true,
-  "message": "Appointment booked successfully",
-  "data": {
-    "id": 1,
-    "idEs": 1,
-    "idC": 2,
-    "status": "Active",
-    "createdAt": "2025-12-20T10:35:00"
-  }
+  "by": "Client"
 }
 ```
 
-**Example Response (Error - Slot Taken):**
+Cancellation updates:
+- Sets ES.status back to `free`
+- Creates Notification with type `cancelled`
+
+### Notifications `/api/notifications`
+
+```
+GET    /api/notifications         - Get all notifications
+GET    /api/notifications/{id}    - Get notification by ID
+GET    /api/notifications/rendez-vous/{idR} - Get notifications for RV
+GET    /api/notifications/type/{type}       - Get notifications by type
+POST   /api/notifications         - Create notification (for testing)
+DELETE /api/notifications/{id}    - Delete notification
+DELETE /api/notifications/clear   - Delete all notifications
+```
+
+### Database Management
+
+```
+GET    /api/db-status             - Get count of records per table
+DELETE /api/clear-db              - Clear entire database
+```
+
+Example DELETE /api/clear-db:
 ```json
 {
-  "success": false,
-  "message": "Booking failed",
-  "errorDetails": "Employee service is not available (status: taken). Available slot IDs: [2, 3, 5]",
-  "availableIds": [2, 3, 5],
-  "timestamp": "2025-12-20T10:36:00"
+  "confirm": true
 }
 ```
 
-### 6. Notifications (N)
+## 🔧 Environment Configuration
 
-```http
-GET    /api/notifications            # List all
-GET    /api/notifications/{id}       # Get by ID
-POST   /api/notifications            # Create manual notification
-DELETE /api/notifications/{id}       # Delete by path ID
-DELETE /api/notifications            # Delete by JSON body
+### .env File
+
+Create `.env` in project root (not committed to Git):
+
+```env
+# Database
+DB_USERNAME=booking_user
+DB_PASSWORD=changeme
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/booking_db
+
+# Time Window (optional, defaults shown)
+APP_TIME_WINDOW_START=09:00
+APP_TIME_WINDOW_END=16:00
+
+# Spring Profile
+SPRING_PROFILES_ACTIVE=dev
 ```
 
----
+### application.properties
+
+Key configurations:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/booking_db
+spring.datasource.username=${DB_USERNAME:booking_user}
+spring.datasource.password=${DB_PASSWORD:changeme}
+
+spring.jpa.hibernate.ddl-auto=validate
+
+# Hot Reload
+spring.devtools.livereload.enabled=true
+spring.devtools.restart.enabled=true
+
+# Time Window
+app.time-window.start=09:00
+app.time-window.end=16:00
+```
 
 ## 🧪 Testing
 
-### Interactive UI Testing
-
-1. **Open Browser:** `http://localhost:8080/`
-2. **Tabs:** Services, Employees, Clients, Employee Services, Rendezvous, Notifications, Admin Tools
-3. **Each Tab Provides:**
-   - Live entity table
-   - Available IDs list
-   - Operation form (GET, CREATE, UPDATE, DELETE)
-   - Real-time response display with error details
-
-### Running Tests
+### Unit Tests
 
 ```bash
-# Run all tests
-mvn test
-
-# Run specific test class
-mvn test -Dtest=RendezVousServiceTest
-
-# Run with coverage
-mvn test jacoco:report
+./mvnw test
 ```
 
-### Unit Tests (Included)
+Tests are located in `src/test/java/com/daleelteq/booking/`
 
-- `ServiceServiceTest` — Service CRUD operations
-- `RendezVousServiceTest` — Booking and cancellation logic
-- `ValidationTest` — Time/date validation rules
-- Controller tests with MockMvc
+### Integration Tests with Testcontainers
 
-### Integration Tests
-
-Uses Testcontainers with reusable PostgreSQL container (singleton pattern for speed).
-
----
-
-## 📊 Data Model
-
-### Entities & Relationships
-
-```
-Services (S)
-  │
-  ├─ (1:*) ──────────────────── Employee_Services (ES)
-  │                              │
-  │ Employees (E)                │
-  │  │                           │
-  │  └─ (1:*) ────────────────── │
-  │                              │
-  │                              ├─ (1:*) ────────── Rendez_vous (R)
-  │                                                  │
-  │ Clients (C)                                      │
-  │  │                                               │
-  │  └─ (1:*) ────────────────────────────────────── │
-  │                                                  │
-  │                                                  └─ (1:*) ──── Notifications (N)
+```bash
+./mvnw verify
 ```
 
-### Key Fields
+Uses Reusable Singleton pattern for PostgreSQL container:
+- Database starts once per test suite
+- Shared across all integration tests
+- Significant performance improvement
 
-**Services (S)**
-- `id`: PK
-- `lib`: Service name
-- `time_value`: Duration {15, 20, 25, 30} mins
+## 📝 Error Response Examples
 
-**Employees (E)**
-- `id`: PK
-- `lib`: Employee name
-
-**Clients (C)**
-- `id`: PK
-- `lib`: Client name
-- `number`: Phone number
-
-**Employee_Services (ES)**
-- `id`: PK
-- `id_e`: FK to Employee
-- `id_s`: FK to Service
-- `date`: YYYY-MM-DD
-- `start`, `end`: HH:mm time slots
-- `x2`: Boolean (double duration)
-- `time_value`: Computed (S.time_value * (X_2 ? 2 : 1))
-- `status`: 'free' | 'taken'
-
-**Rendez_vous (R)**
-- `id`: PK
-- `id_es`: FK to EmployeeService
-- `id_c`: FK to Client
-- `status`: 'Active' | 'Cancelled by Client' | 'Cancelled by Employee'
-
-**Notifications (N)**
-- `id`: PK
-- `id_r`: FK to RendezVous
-- `type`: 'booked' | 'cancelled'
-- `value`: Status/message text
-
----
-
-## ⚠️ Error Handling
-
-### Error Response Format
-
-All errors return:
-
+### Entity Not Found
 ```json
 {
-  "success": false,
-  "message": "Validation failed",
-  "errorDetails": "Field: start - Start time must be between 08:00 and 17:00. You provided: 07:30",
-  "availableIds": [1, 2, 3],
-  "timestamp": "2025-12-20T10:40:00"
+  "status": 404,
+  "error": "Not Found",
+  "message": "Service with id 999 not found. Available service ids: [1,2,3,4]"
 }
 ```
 
-### Common Errors
-
-| Status | Scenario | Example |
-|--------|----------|---------|
-| 400 | Invalid input (bad time format, invalid date) | Start time must be between 08:00 and 17:00 |
-| 404 | Entity not found | Service with id 999 not found |
-| 409 | Business rule violation | Employee service is already taken |
-| 500 | Server error | Internal server error |
-
----
-
-## 📝 Logging
-
-Logs are configured in `application.properties`:
-
-```properties
-logging.level.com.daleelteq.booking=DEBUG
-logging.level.org.springframework.web=INFO
-logging.level.org.hibernate.SQL=DEBUG
+### Validation Error - Invalid Time Window
+```json
+{
+  "status": 422,
+  "error": "Unprocessable Entity",
+  "message": "Invalid time: end 16:15 exceeds allowed window 09:00–16:00 for timeValue 30. For a 30-minute slot, start must be between 09:00 and 15:30."
+}
 ```
 
-### Log Locations
-
-- **Console:** Visible in IDE or terminal
-- **File:** (Optional) Configure in `logback-spring.xml`
-
-### Example Log Entries
-
-```
-2025-12-20 10:35:00.123 DEBUG [main] RendezVousService : Booking rendezvous for ES id: 1, Client id: 2
-2025-12-20 10:35:00.234 INFO  [main] RendezVousService : RendezVous created with id: 1
-2025-12-20 10:35:00.235 DEBUG [main] GlobalExceptionHandler : Entity not found: Service with id 999
+### Validation Error - Timeslot Already Booked
+```json
+{
+  "status": 409,
+  "error": "Conflict",
+  "message": "Timeslot ES id 12 is already taken. Available free ES ids: [14,16,18]"
+}
 ```
 
----
-
-## 🔄 Hot Reload (DevTools)
-
-Changes to source files trigger automatic restart:
-
-1. **Make code change** (e.g., modify a method in a service)
-2. **IDE auto-compiles** (or manually compile)
-3. **DevTools detects change** and restarts application
-4. **No manual restart needed** — app is live after 2-3 seconds
-
-Excluded from restart (to avoid unnecessary resets):
-- Templates (can reload separately)
-- Static assets
-- Logback config
-
----
-
-## 📦 Build & Deployment
-
-### Build JAR
-
-```bash
-mvn clean package
+### Missing Required Field
+```json
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Missing 'id' in request body for update. Available service ids: [1,2,3]"
+}
 ```
 
-Output: `target/booking-service-0.0.1-SNAPSHOT.jar`
+## 🔄 Hot Reload
 
-### Run JAR
+The application includes Spring DevTools for automatic reload:
 
-```bash
-java -jar target/booking-service-0.0.1-SNAPSHOT.jar
+1. Start the app: `./mvnw spring-boot:run`
+2. Edit Java files, HTML templates, or `application.properties`
+3. Changes reload automatically within 1-2 seconds
+4. No need to restart the application
+
+## 🗂️ Project Structure
+
+```
+src/
+├── main/
+│   ├── java/com/daleelteq/booking/
+│   │   ├── BookingApplication.java
+│   │   ├── config/
+│   │   │   ├── WebConfig.java              (Case-insensitive routing)
+│   │   │   ├── TimeWindowConfig.java       (Time window properties)
+│   │   │   └── DotenvEnvironmentPostProcessor.java
+│   │   ├── controller/                     (REST endpoints)
+│   │   ├── domain/                         (JPA entities)
+│   │   ├── dto/                            (Data transfer objects)
+│   │   ├── exception/                      (Exception handlers)
+│   │   ├── repository/                     (Data access layer)
+│   │   └── service/                        (Business logic)
+│   └── resources/
+│       ├── application.properties
+│       ├── db/schema-postgres18.sql
+│       └── templates/index.html
+└── test/
+    └── java/com/daleelteq/booking/
+        ├── service/                        (Unit tests)
+        └── integration/                    (Integration tests)
 ```
 
-### Docker (Optional)
+## 📊 Data Model Summary
 
-Create `Dockerfile`:
-
-```dockerfile
-FROM openjdk:25
-COPY target/booking-service-0.0.1-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
-
-Build & run:
-
-```bash
-docker build -t booking-service .
-docker run -p 8080:8080 --env-file .env booking-service
-```
-
----
-
-## 📚 Dependencies
-
-See `pom.xml` for full list. Key dependencies:
-
-- `spring-boot-starter-web` — REST APIs
-- `spring-boot-starter-data-jpa` — Database layer
-- `spring-boot-starter-thymeleaf` — Web UI
-- `postgresql` — JDBC driver
-- `lombok` — Boilerplate reduction
-- `spring-boot-devtools` — Hot reload
-- `testcontainers` — Container-based testing
-
----
-
-## 🤝 Contributing
-
-1. Create a feature branch
-2. Make changes
-3. Run tests: `mvn test`
-4. Build: `mvn clean package`
-5. Push and create a PR
-
----
-
-## 📄 License
-
-Proprietary — DaleelTeq
-
----
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| **services** | id, lib, time_value | Service definitions |
+| **employees** | id, lib | Employee records |
+| **clients** | id, lib, number | Client records |
+| **employee_x_services** | id, id_e, id_s, date, start, end, time_value, x_2, status | Available timeslots |
+| **rendez_vous** | id, id_es, id_c, status, created_at | Client bookings |
+| **es_notification** | id, id_r, type, value, x_2, time_value | Booking audit trail |
 
 ## 🆘 Troubleshooting
 
-### Q: Application won't start
-**A:** Check:
-1. Java 25 installed: `java -version`
-2. PostgreSQL running: `psql -U postgres -c "SELECT version()"`
-3. `.env` file has correct credentials
+### "Connection refused" to PostgreSQL
+- Ensure PostgreSQL is running: `psql -U postgres`
+- Check port 5432 is accessible
+- Verify credentials in `.env`
 
-### Q: "Cannot connect to database"
-**A:**
-```bash
-# Test connection
-psql -U booking_user -d booking_db -c "SELECT 1"
-```
+### Maven build fails
+- Ensure Java 25: `java -version`
+- Clear cache: `./mvnw clean`
+- Update Maven: `./mvnw -v`
 
-### Q: Port 8080 already in use
-**A:** Change in `application.properties`:
-```properties
-server.port=8081
-```
+### IntelliJ doesn't recognize Maven
+- Right-click `pom.xml` → "Add as Maven Project"
+- File → Project Structure → Check SDK is Java 25
 
-### Q: Maven not found
-**A:** Use Maven Wrapper:
-```bash
-./mvnw clean package  # On Linux/Mac
-mvnw.cmd clean package  # On Windows
-```
+### Hot reload not working
+- Check DevTools dependencies in `pom.xml`
+- Ensure `spring.devtools.restart.enabled=true`
+- Build project: Ctrl+Shift+F9 (IntelliJ)
 
-### Q: Hot Reload not working
-**A:** In IntelliJ: Enable **Build Project Automatically**
-- File → Settings → Compiler → Check "Build project automatically"
+## 📄 License
 
----
+This project is part of the DaleelTeq system.
 
 ## 📞 Support
 
-For issues, check logs and error responses. They include:
-- Exact field that failed validation
-- Valid range/format for that field
-- Available IDs for testing next request
-
----
-
-**Version:** 0.0.1  
-**Last Updated:** 2025-12-20  
-**Spring Boot:** 4.0.0  
-**Java:** 25
-
+For issues or questions, refer to the project documentation or contact the development team.

@@ -1,90 +1,138 @@
 package com.daleelteq.booking.service;
 
 import com.daleelteq.booking.domain.Notification;
-import com.daleelteq.booking.domain.RendezVous;
 import com.daleelteq.booking.dto.NotificationDto;
 import com.daleelteq.booking.exception.EntityNotFoundException;
 import com.daleelteq.booking.repository.NotificationRepository;
-import com.daleelteq.booking.repository.RendezVousRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class NotificationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
     private final NotificationRepository notificationRepository;
-    private final RendezVousRepository rendezVousRepository;
 
-    @Transactional(readOnly = true)
+    /**
+     * Get all notifications
+     */
     public List<NotificationDto> getAllNotifications() {
-        logger.info("Fetching all notifications");
+        log.debug("Fetching all notifications");
         return notificationRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get notification by ID
+     */
     public NotificationDto getNotificationById(Long id) {
-        logger.info("Fetching notification with id: {}", id);
+        log.debug("Fetching notification with id: {}", id);
         Notification notification = notificationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Notification", id));
-        return convertToDto(notification);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableNotificationIds();
+                    log.warn("Notification not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Notification with id %d not found. Available notification ids: %s", id, availableIds)
+                    );
+                });
+        return toDto(notification);
     }
 
-    @Transactional(readOnly = true)
-    public List<NotificationDto> getNotificationsByRendezVousId(Long rendezVousId) {
-        logger.info("Fetching notifications for rendezvous id: {}", rendezVousId);
-        return notificationRepository.findByRendezVousId(rendezVousId).stream()
-                .map(this::convertToDto)
+    /**
+     * Get notifications by rendez-vous ID
+     */
+    public List<NotificationDto> getNotificationsByRendezVousId(Long idR) {
+        log.debug("Fetching notifications for rendez-vous id: {}", idR);
+        return notificationRepository.findByIdR(idR).stream()
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+    /**
+     * Get notifications by type (booked or cancelled)
+     */
+    public List<NotificationDto> getNotificationsByType(String type) {
+        log.debug("Fetching notifications by type: {}", type);
+        return notificationRepository.findByType(type).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Create notification (for testing purposes)
+     */
     public NotificationDto createNotification(NotificationDto dto) {
-        logger.info("Creating notification for rendezvous id: {}", dto.getIdR());
-        
-        RendezVous rendezVous = rendezVousRepository.findById(dto.getIdR())
-                .orElseThrow(() -> new EntityNotFoundException("RendezVous", dto.getIdR()));
-        
+        log.info("Creating notification for rendez-vous id: {}", dto.getIdR());
+
         Notification notification = Notification.builder()
-                .rendezVous(rendezVous)
+                .idR(dto.getIdR())
                 .type(dto.getType())
                 .value(dto.getValue())
+                .x2(dto.getX2() != null ? dto.getX2() : false)
+                .timeValue(dto.getTimeValue() != null ? dto.getTimeValue() : 0)
                 .build();
-        
+
         Notification saved = notificationRepository.save(notification);
-        logger.info("Notification created with id: {}", saved.getId());
-        return convertToDto(saved);
+        log.info("Notification created successfully with id: {}", saved.getId());
+        return toDto(saved);
     }
 
-    @Transactional
+    /**
+     * Delete notification
+     */
     public void deleteNotification(Long id) {
-        logger.info("Deleting notification with id: {}", id);
-        
+        log.info("Deleting notification with id: {}", id);
+
         if (!notificationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Notification", id);
+            String availableIds = getAvailableNotificationIds();
+            log.warn("Notification not found with id: {}. Available ids: {}", id, availableIds);
+            throw new EntityNotFoundException(
+                    String.format("Notification with id %d not found. Available notification ids: %s", id, availableIds)
+            );
         }
-        
+
         notificationRepository.deleteById(id);
-        logger.info("Notification deleted with id: {}", id);
+        log.info("Notification deleted successfully with id: {}", id);
     }
 
-    private NotificationDto convertToDto(Notification notification) {
+    /**
+     * Delete all notifications
+     */
+    public void deleteAllNotifications() {
+        log.warn("Deleting all notifications");
+        notificationRepository.deleteAll();
+        log.info("All notifications deleted");
+    }
+
+    /**
+     * Helper method to get available notification IDs for error messages
+     */
+    private String getAvailableNotificationIds() {
+        return notificationRepository.findAll().stream()
+                .map(n -> String.valueOf(n.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Convert entity to DTO
+     */
+    private NotificationDto toDto(Notification notification) {
         return NotificationDto.builder()
                 .id(notification.getId())
-                .idR(notification.getRendezVous().getId())
+                .idR(notification.getIdR())
                 .type(notification.getType())
                 .value(notification.getValue())
+                .x2(notification.getX2())
+                .timeValue(notification.getTimeValue())
                 .createdAt(notification.getCreatedAt())
                 .build();
     }
 }
-

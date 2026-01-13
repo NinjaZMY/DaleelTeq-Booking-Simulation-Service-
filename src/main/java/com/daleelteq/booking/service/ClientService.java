@@ -5,84 +5,135 @@ import com.daleelteq.booking.dto.ClientDto;
 import com.daleelteq.booking.exception.EntityNotFoundException;
 import com.daleelteq.booking.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ClientService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
     private final ClientRepository clientRepository;
 
-    @Transactional(readOnly = true)
+    /**
+     * Get all clients
+     */
     public List<ClientDto> getAllClients() {
-        logger.info("Fetching all clients");
+        log.debug("Fetching all clients");
         return clientRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get client by ID
+     */
     public ClientDto getClientById(Long id) {
-        logger.info("Fetching client with id: {}", id);
+        log.debug("Fetching client with id: {}", id);
         Client client = clientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Client", id));
-        return convertToDto(client);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableClientIds();
+                    log.warn("Client not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Client with id %d not found. Available client ids: %s", id, availableIds)
+                    );
+                });
+        return toDto(client);
     }
 
-    @Transactional
+    /**
+     * Create new client
+     */
     public ClientDto createClient(ClientDto dto) {
-        logger.info("Creating client: {}", dto.getLib());
-        
+        log.info("Creating new client: {}", dto.getLib());
+
         Client client = Client.builder()
                 .lib(dto.getLib())
                 .number(dto.getNumber())
                 .build();
-        
+
         Client saved = clientRepository.save(client);
-        logger.info("Client created with id: {}", saved.getId());
-        return convertToDto(saved);
+        log.info("Client created successfully with id: {}", saved.getId());
+        return toDto(saved);
     }
 
-    @Transactional
+    /**
+     * Update client
+     */
     public ClientDto updateClient(Long id, ClientDto dto) {
-        logger.info("Updating client with id: {}", id);
-        
+        log.info("Updating client with id: {}", id);
+
         Client client = clientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Client", id));
-        
-        client.setLib(dto.getLib());
-        client.setNumber(dto.getNumber());
-        
-        Client updated = clientRepository.save(client);
-        logger.info("Client updated with id: {}", id);
-        return convertToDto(updated);
-    }
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableClientIds();
+                    log.warn("Client not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Client with id %d not found. Available client ids: %s", id, availableIds)
+                    );
+                });
 
-    @Transactional
-    public void deleteClient(Long id) {
-        logger.info("Deleting client with id: {}", id);
-        
-        if (!clientRepository.existsById(id)) {
-            throw new EntityNotFoundException("Client", id);
+        if (dto.getLib() != null) {
+            client.setLib(dto.getLib());
         }
-        
-        clientRepository.deleteById(id);
-        logger.info("Client deleted with id: {}", id);
+        if (dto.getNumber() != null) {
+            client.setNumber(dto.getNumber());
+        }
+
+        Client updated = clientRepository.save(client);
+        log.info("Client updated successfully with id: {}", updated.getId());
+        return toDto(updated);
     }
 
-    private ClientDto convertToDto(Client client) {
+    /**
+     * Delete client
+     */
+    public void deleteClient(Long id) {
+        log.info("Deleting client with id: {}", id);
+
+        if (!clientRepository.existsById(id)) {
+            String availableIds = getAvailableClientIds();
+            log.warn("Client not found with id: {}. Available ids: {}", id, availableIds);
+            throw new EntityNotFoundException(
+                    String.format("Client with id %d not found. Available client ids: %s", id, availableIds)
+            );
+        }
+
+        clientRepository.deleteById(id);
+        log.info("Client deleted successfully with id: {}", id);
+    }
+
+    /**
+     * Delete all clients
+     */
+    public void deleteAllClients() {
+        log.warn("Deleting all clients");
+        clientRepository.deleteAll();
+        log.info("All clients deleted");
+    }
+
+    /**
+     * Helper method to get available client IDs for error messages
+     */
+    private String getAvailableClientIds() {
+        return clientRepository.findAll().stream()
+                .map(c -> String.valueOf(c.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Convert entity to DTO
+     */
+    private ClientDto toDto(Client client) {
         return ClientDto.builder()
                 .id(client.getId())
                 .lib(client.getLib())
                 .number(client.getNumber())
+                .createdAt(client.getCreatedAt())
                 .build();
     }
 }
-

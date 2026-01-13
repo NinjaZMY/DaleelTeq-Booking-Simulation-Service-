@@ -5,81 +5,130 @@ import com.daleelteq.booking.dto.EmployeeDto;
 import com.daleelteq.booking.exception.EntityNotFoundException;
 import com.daleelteq.booking.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EmployeeService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
     private final EmployeeRepository employeeRepository;
 
-    @Transactional(readOnly = true)
+    /**
+     * Get all employees
+     */
     public List<EmployeeDto> getAllEmployees() {
-        logger.info("Fetching all employees");
+        log.debug("Fetching all employees");
         return employeeRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get employee by ID
+     */
     public EmployeeDto getEmployeeById(Long id) {
-        logger.info("Fetching employee with id: {}", id);
+        log.debug("Fetching employee with id: {}", id);
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Employee", id));
-        return convertToDto(employee);
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableEmployeeIds();
+                    log.warn("Employee not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Employee with id %d not found. Available employee ids: %s", id, availableIds)
+                    );
+                });
+        return toDto(employee);
     }
 
-    @Transactional
+    /**
+     * Create new employee
+     */
     public EmployeeDto createEmployee(EmployeeDto dto) {
-        logger.info("Creating employee: {}", dto.getLib());
-        
+        log.info("Creating new employee: {}", dto.getLib());
+
         Employee employee = Employee.builder()
                 .lib(dto.getLib())
                 .build();
-        
+
         Employee saved = employeeRepository.save(employee);
-        logger.info("Employee created with id: {}", saved.getId());
-        return convertToDto(saved);
+        log.info("Employee created successfully with id: {}", saved.getId());
+        return toDto(saved);
     }
 
-    @Transactional
+    /**
+     * Update employee
+     */
     public EmployeeDto updateEmployee(Long id, EmployeeDto dto) {
-        logger.info("Updating employee with id: {}", id);
-        
+        log.info("Updating employee with id: {}", id);
+
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Employee", id));
-        
-        employee.setLib(dto.getLib());
-        
-        Employee updated = employeeRepository.save(employee);
-        logger.info("Employee updated with id: {}", id);
-        return convertToDto(updated);
-    }
+                .orElseThrow(() -> {
+                    String availableIds = getAvailableEmployeeIds();
+                    log.warn("Employee not found with id: {}. Available ids: {}", id, availableIds);
+                    return new EntityNotFoundException(
+                            String.format("Employee with id %d not found. Available employee ids: %s", id, availableIds)
+                    );
+                });
 
-    @Transactional
-    public void deleteEmployee(Long id) {
-        logger.info("Deleting employee with id: {}", id);
-        
-        if (!employeeRepository.existsById(id)) {
-            throw new EntityNotFoundException("Employee", id);
+        if (dto.getLib() != null) {
+            employee.setLib(dto.getLib());
         }
-        
-        employeeRepository.deleteById(id);
-        logger.info("Employee deleted with id: {}", id);
+
+        Employee updated = employeeRepository.save(employee);
+        log.info("Employee updated successfully with id: {}", updated.getId());
+        return toDto(updated);
     }
 
-    private EmployeeDto convertToDto(Employee employee) {
+    /**
+     * Delete employee
+     */
+    public void deleteEmployee(Long id) {
+        log.info("Deleting employee with id: {}", id);
+
+        if (!employeeRepository.existsById(id)) {
+            String availableIds = getAvailableEmployeeIds();
+            log.warn("Employee not found with id: {}. Available ids: {}", id, availableIds);
+            throw new EntityNotFoundException(
+                    String.format("Employee with id %d not found. Available employee ids: %s", id, availableIds)
+            );
+        }
+
+        employeeRepository.deleteById(id);
+        log.info("Employee deleted successfully with id: {}", id);
+    }
+
+    /**
+     * Delete all employees
+     */
+    public void deleteAllEmployees() {
+        log.warn("Deleting all employees");
+        employeeRepository.deleteAll();
+        log.info("All employees deleted");
+    }
+
+    /**
+     * Helper method to get available employee IDs for error messages
+     */
+    private String getAvailableEmployeeIds() {
+        return employeeRepository.findAll().stream()
+                .map(e -> String.valueOf(e.getId()))
+                .collect(Collectors.joining(",", "[", "]"));
+    }
+
+    /**
+     * Convert entity to DTO
+     */
+    private EmployeeDto toDto(Employee employee) {
         return EmployeeDto.builder()
                 .id(employee.getId())
                 .lib(employee.getLib())
+                .createdAt(employee.getCreatedAt())
                 .build();
     }
 }
-
