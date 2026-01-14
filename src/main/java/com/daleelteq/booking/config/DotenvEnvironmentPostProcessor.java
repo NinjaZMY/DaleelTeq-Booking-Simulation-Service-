@@ -1,74 +1,93 @@
 package com.daleelteq.booking.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * EnvironmentPostProcessor to load .env file and merge with system environment.
+ * Environment loader to load .env file and merge with system environment.
  * Falls back to system environment variables if .env is not found.
+ * 
+ * For Spring Boot 4.x compatibility, loads .env file manually without external Dotenv library.
  */
 @Slf4j
-@Component
-public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor {
+@Configuration
+public class DotenvEnvironmentPostProcessor {
 
     private static final String ENV_FILE_PATH = ".env";
+    private static final Map<String, String> envProperties = new HashMap<>();
 
-    @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        try {
-            File envFile = new File(ENV_FILE_PATH);
-            if (envFile.exists()) {
-                log.info("Loading .env file from: {}", envFile.getAbsolutePath());
-                Dotenv dotenv = Dotenv.load();
+    static {
+        loadEnvFile();
+    }
 
-                Map<String, Object> envProperties = new HashMap<>();
-                
-                // Load all environment variables from dotenv
-                // Use System.getenv() with dotenv as fallback
-                String dbUsername = dotenv.get("DB_USERNAME");
-                String dbPassword = dotenv.get("DB_PASSWORD");
-                String datasourceUrl = dotenv.get("SPRING_DATASOURCE_URL");
-                String timeWindowStart = dotenv.get("APP_TIME_WINDOW_START");
-                String timeWindowEnd = dotenv.get("APP_TIME_WINDOW_END");
-                
-                if (dbUsername != null) {
-                    envProperties.put("spring.datasource.username", dbUsername);
-                    log.debug("Loaded from .env: DB_USERNAME");
+    /**
+     * Load .env file manually into a map
+     */
+    private static void loadEnvFile() {
+        File envFile = new File(ENV_FILE_PATH);
+        if (envFile.exists()) {
+            log.info("Loading .env file from: {}", envFile.getAbsolutePath());
+            try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Skip comments and empty lines
+                    if (line.trim().isEmpty() || line.trim().startsWith("#")) {
+                        continue;
+                    }
+                    
+                    // Parse KEY=VALUE
+                    if (line.contains("=")) {
+                        String[] parts = line.split("=", 2);
+                        if (parts.length == 2) {
+                            String key = parts[0].trim();
+                            String value = parts[1].trim();
+                            // Remove quotes if present
+                            if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                                (value.startsWith("'") && value.endsWith("'"))) {
+                                value = value.substring(1, value.length() - 1);
+                            }
+                            envProperties.put(key, value);
+                            log.debug("Loaded .env property: {}", key);
+                        }
+                    }
                 }
-                if (dbPassword != null) {
-                    envProperties.put("spring.datasource.password", dbPassword);
-                    log.debug("Loaded from .env: DB_PASSWORD (***masked***)");
-                }
-                if (datasourceUrl != null) {
-                    envProperties.put("spring.datasource.url", datasourceUrl);
-                    log.debug("Loaded from .env: SPRING_DATASOURCE_URL");
-                }
-                if (timeWindowStart != null) {
-                    envProperties.put("app.time-window.start", timeWindowStart);
-                    log.debug("Loaded from .env: APP_TIME_WINDOW_START");
-                }
-                if (timeWindowEnd != null) {
-                    envProperties.put("app.time-window.end", timeWindowEnd);
-                    log.debug("Loaded from .env: APP_TIME_WINDOW_END");
-                }
-
-                MapPropertySource propertySource = new MapPropertySource("dotenv", envProperties);
-                environment.getPropertySources().addFirst(propertySource);
                 log.info(".env file loaded successfully with {} properties", envProperties.size());
-            } else {
-                log.info(".env file not found at {}. Using system environment variables and application.properties", ENV_FILE_PATH);
+            } catch (IOException e) {
+                log.warn("Failed to load .env file: {}. Falling back to system environment", e.getMessage());
             }
-        } catch (Exception e) {
-            log.warn("Failed to load .env file, falling back to system environment: {}", e.getMessage());
+        } else {
+            log.info(".env file not found at {}. Will use system environment variables and application.properties", ENV_FILE_PATH);
         }
+    }
+
+    /**
+     * Get environment variable from .env or system environment
+     */
+    public static String getEnv(String key) {
+        String value = envProperties.get(key);
+        if (value == null) {
+            value = System.getenv(key);
+            if (value != null) {
+                log.debug("Using system environment variable for: {}", key);
+            }
+        } else {
+            log.debug("Using .env variable for: {}", key);
+        }
+        return value;
+    }
+
+    /**
+     * Get environment variable with fallback default value
+     */
+    public static String getEnv(String key, String defaultValue) {
+        String value = getEnv(key);
+        return value != null ? value : defaultValue;
     }
 }

@@ -22,4 +22,8 @@ public class IdRequestDto {
     private String end;   // HH:mm
     private String date;  // YYYY-MM-DD
     private String status;
+    // Generic fields for flexible updates
+    private String lib;   // For Employee, Service, Client name/label
+    private String number; // For Client phone number
+    private Integer timeValue; // For Service and EmployeeXService time value
 }
