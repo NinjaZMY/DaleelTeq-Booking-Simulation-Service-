@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>1.18.40</version>
             <scope>provided</scope>
         </dependency>
 
@@ -148,12 +148,10 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>1.18.40</version>
                         </path>
                     </annotationProcessorPaths>
-                    <annotationProcessors>
-                        <annotationProcessor>lombok.launch.AnnotationProcessor</annotationProcessor>
-                    </annotationProcessors>
+                    <forceLegacyJavacApi>true</forceLegacyJavacApi>
                 </configuration>
             </plugin>
         </plugins>
