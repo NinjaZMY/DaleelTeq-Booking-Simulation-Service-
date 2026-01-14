@@ -58,7 +58,7 @@ public class EmployeeXServiceRestController {
                     .body(ApiResponse.success(created, "ES timeslot created successfully"));
         } catch (ValidationException e) {
             logger.warn("Validation error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                     .body(ApiResponse.error("Validation failed", e.getMessage()));
         } catch (EntityNotFoundException e) {
             logger.warn("Entity not found: {}", e.getMessage());
@@ -86,7 +86,7 @@ public class EmployeeXServiceRestController {
                     .body(ApiResponse.error(e.getMessage(), "ES not found", availableIds));
         } catch (ValidationException e) {
             logger.warn("Validation error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                     .body(ApiResponse.error("Validation failed", e.getMessage()));
         } catch (Exception e) {
             logger.error("Error updating ES", e);

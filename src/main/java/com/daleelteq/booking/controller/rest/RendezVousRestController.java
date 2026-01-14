@@ -62,7 +62,7 @@ public class RendezVousRestController {
                     .body(ApiResponse.success(booked, "Appointment booked successfully"));
         } catch (ValidationException e) {
             logger.warn("Validation error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                     .body(ApiResponse.error("Validation failed", e.getMessage()));
         } catch (EntityNotFoundException e) {
             logger.warn("Entity not found: {}", e.getMessage());
