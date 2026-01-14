@@ -2,17 +2,25 @@
 
 ## 🚀 Get Started in 5 Minutes
 
-### Step 1: Database Setup (5 min)
+### Step 1: Run Without Database (Verify Setup)
 
-#### On Windows with psql installed:
+```bash
+mvn spring-boot:run
+```
 
-Open Command Prompt and run:
+**Expected**: Application starts on `http://localhost:8080`
 
-```cmd
+Stop with `Ctrl+C` when ready to configure database.
+
+### Step 2: Database Setup (5 minutes)
+
+Open PostgreSQL:
+
+```bash
 psql -U postgres
 ```
 
-Paste and execute this SQL:
+Execute:
 
 ```sql
 CREATE DATABASE booking_db;
@@ -21,64 +29,40 @@ GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
 \q
 ```
 
-Then load the schema:
-
-```cmd
-psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
-```
-
-#### On macOS/Linux:
-
-```bash
-psql -U postgres
-```
-
-Then same SQL as above, followed by:
+Load schema:
 
 ```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
 ```
 
-### Step 2: Environment Setup (1 min)
-
-The `.env` file is already created with correct defaults:
-- `DB_USERNAME=booking_user`
-- `DB_PASSWORD=changeme`
-
-No changes needed if you used the SQL above.
-
-### Step 3: Run the Application (1 min)
-
-**Option A: Using Maven Wrapper (Recommended)**
+Verify:
 
 ```bash
-./mvnw spring-boot:run
+psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
 
-Or on Windows:
+Expected: **4**
 
-```cmd
-mvnw.cmd spring-boot:run
-```
-
-**Option B: Using IntelliJ**
-
-1. Open `BookingApplication.java`
-2. Click the green Run button (or press Shift+F10)
-
-**Option C: Using local Maven**
+### Step 3: Create `.env` File
 
 ```bash
+cp .env.example .env
+```
+
+No changes needed if using default credentials above.
+
+### Step 4: Run Application with Database
+
+```bash
+mvn clean compile
 mvn spring-boot:run
 ```
 
-### Step 4: Access the Application
+Visit: `http://localhost:8080`
 
-Open your browser and go to:
+### Step 5: Test API Endpoints
 
-```
-http://localhost:8080
-```
+See **TESTING_GUIDE.md** for Postman examples and API reference.
 
 You should see the **DaleelTeq Booking Dashboard** with all entity lists and action buttons.
 
@@ -94,133 +78,36 @@ You should see the **DaleelTeq Booking Dashboard** with all entity lists and act
 - Service ID: **1**
 - Date: **2026-02-20**
 - Start Time: **10:00**
-- Click **Create Timeslot**
-- Check the response box for success message
+## 🧪 Testing
 
-### 3. Book an Appointment
-- Go to **Rendez-vous** section
-- Timeslot ID (ES ID): **4** (the one you just created)
-- Client ID: **1**
-- Click **Book Appointment**
-- Response should show new rendez-vous with status "Active"
+### Via Web UI
 
-### 4. Test Postman
-- Base URL: `http://localhost:8080/api`
+1. **Create Service**: Form at http://localhost:8080
+2. **Create Employee**: Add employee via UI
+3. **Create Timeslot (ES)**: Provide date, start time, duration
+4. **Book Appointment**: Select timeslot and client
 
-Example requests:
+### Via Postman
 
-**Get All Services:**
-```
-GET /api/services
-```
+Base URL: `http://localhost:8080/api`
 
-**Create Service:**
-```
-POST /api/services
-Content-Type: application/json
+See **TESTING_GUIDE.md** for complete Postman request examples.
 
-{
-  "lib": "Massage",
-  "timeValue": 30
-}
-```
+## 🆘 Troubleshooting
 
-**Create Timeslot:**
-```
-POST /api/es
-Content-Type: application/json
-
-{
-  "idE": 1,
-  "idS": 2,
-  "date": "2026-02-21",
-  "start": "11:00",
-  "x2": false
-}
-```
-
-**Book Appointment:**
-```
-POST /api/rendezvous
-Content-Type: application/json
-
-{
-  "idES": 5,
-  "idC": 2
-}
-```
-
-## 🔧 Troubleshooting
-
-### Application won't start: "Connection refused"
-
-**Problem:** PostgreSQL is not running
-
-**Solution:**
-
-**Windows:**
-```cmd
-# Check if PostgreSQL is running in Services
-# Or start it via PowerShell as Admin:
-net start PostgreSQL
-```
-
-**macOS:**
-```bash
-brew services start postgresql@18
-```
-
-**Linux:**
-```bash
-sudo systemctl start postgresql
-```
-
-### Maven build fails: "Java 25 not found"
-
-**Problem:** Java version mismatch
-
-**Solution:**
-```bash
-java -version  # Should show Java 25.x.x
-```
-
-If not, set `JAVA_HOME`:
-
-**Windows:**
-```cmd
-set JAVA_HOME=C:\Program Files\Java\jdk-25
-```
-
-**macOS/Linux:**
-```bash
-export JAVA_HOME=/usr/libexec/java_home -v 25
-```
-
-### IntelliJ doesn't recognize project
-
-**Solution:**
-1. File → Invalidate Caches → Invalidate and Restart
-2. Or: Right-click `pom.xml` → Add as Maven Project
-
-### Changes not reloading
-
-**Problem:** Hot reload not working
-
-**Solution:**
-- Build the project manually: Ctrl+Shift+F9 (IntelliJ)
-- Or restart: mvn spring-boot:run
+| Issue | Solution |
+|-------|----------|
+| "Connection refused" to PostgreSQL | Ensure PostgreSQL is running: `psql -U postgres` |
+| "Java 25 not found" | Run `java -version` - must be 25.x.x |
+| IntelliJ doesn't recognize Maven | Right-click `pom.xml` → "Add as Maven Project" |
+| Hot reload not working | Build project: Ctrl+Shift+F9 (IntelliJ) |
+| Port 8080 in use | Change `server.port` in `application.properties` |
 
 ## 📚 Next Steps
 
-1. **Read the full README.md** for complete API documentation
-2. **Test all endpoints** using the web dashboard or Postman
-3. **Explore the code** in `src/main/java`
-4. **Run tests** with `./mvnw test`
-5. **Deploy** to production when ready
+1. ✅ Run Phase 1 of **TESTING_GUIDE.md** (no database)
+2. ✅ Set up database (Phase 2)
+3. ✅ Test all endpoints with Postman (Phase 3)
+4. ✅ Review error messages for precision
+5. ✅ Run unit tests: `mvn test`
 
-## 🆘 Still Stuck?
-
-1. Check the application logs (console output)
-2. Verify database connection: `psql -U booking_user -d booking_db -c "SELECT 1;"`
-3. Check `.env` file has correct credentials
-4. Make sure port 8080 is not in use

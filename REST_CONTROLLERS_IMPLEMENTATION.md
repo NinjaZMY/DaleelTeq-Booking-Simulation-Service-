@@ -216,13 +216,14 @@ DELETE /api/rendezvous/{id}
 ## Next Steps
 
 1. ✅ Controllers implemented
-2. ⏭️ Run the application: `./mvnw spring-boot:run`
-3. ⏭️ Test endpoints with Postman or web UI
+2. ⏭️ Run the application: `mvn spring-boot:run`
+3. ⏭️ Test endpoints with Postman or web UI (see TESTING_GUIDE.md)
 4. ⏭️ Verify booking workflow (book → notification → cancel)
 
 ---
 
 **Status:** 🎉 **READY FOR FULL TESTING**
 
-The REST controllers are now properly implemented with full CRUD functionality, not just deprecated stubs!
+The REST controllers are properly implemented with full CRUD functionality!
+
 

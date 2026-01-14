@@ -133,29 +133,32 @@ Expected output: 4 rows
 
 ## ▶️ Running the Application
 
-### Option 1: Using Maven (Recommended)
+### Start the Application
 
 ```bash
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
-Or on Windows:
-```cmd
-mvnw.cmd spring-boot:run
+### Verify Application Started
+
+Expected output:
+```
+[main] c.d.b.BookingApplication : Starting BookingApplication
+[main] t.m.s.TomcatWebServer : Tomcat started on port(s): 8080 (http)
 ```
 
-### Option 2: Using IntelliJ IDEA
+Access the Web UI: `http://localhost:8080`
 
-1. Open the project in IntelliJ
-2. Right-click `BookingApplication.java`
-3. Select "Run 'BookingApplication.main()'"
-
-### Option 3: Build and Run JAR
+### Alternative: Run JAR
 
 ```bash
-./mvnw clean package
+mvn clean package
 java -jar target/booking-simulation-service-1.0.0.jar
 ```
+
+### Using IntelliJ IDEA
+
+Right-click `BookingApplication.java` → "Run 'BookingApplication.main()'"
 
 ## 🌐 Accessing the Application
 
@@ -347,7 +350,7 @@ app.time-window.end=16:00
 ### Unit Tests
 
 ```bash
-./mvnw test
+mvn test
 ```
 
 Tests are located in `src/test/java/com/daleelteq/booking/`
@@ -355,13 +358,19 @@ Tests are located in `src/test/java/com/daleelteq/booking/`
 ### Integration Tests with Testcontainers
 
 ```bash
-./mvnw verify
+mvn verify
 ```
 
 Uses Reusable Singleton pattern for PostgreSQL container:
 - Database starts once per test suite
 - Shared across all integration tests
 - Significant performance improvement
+
+### Skip Tests During Build
+
+```bash
+mvn clean package -DskipTests
+```
 
 ## 📝 Error Response Examples
 
@@ -405,7 +414,7 @@ Uses Reusable Singleton pattern for PostgreSQL container:
 
 The application includes Spring DevTools for automatic reload:
 
-1. Start the app: `./mvnw spring-boot:run`
+1. Start the app: `mvn spring-boot:run`
 2. Edit Java files, HTML templates, or `application.properties`
 3. Changes reload automatically within 1-2 seconds
 4. No need to restart the application
@@ -457,8 +466,8 @@ src/
 
 ### Maven build fails
 - Ensure Java 25: `java -version`
-- Clear cache: `./mvnw clean`
-- Update Maven: `./mvnw -v`
+- Clear cache: `mvn clean`
+- Check Maven path: `mvn -v`
 
 ### IntelliJ doesn't recognize Maven
 - Right-click `pom.xml` → "Add as Maven Project"
