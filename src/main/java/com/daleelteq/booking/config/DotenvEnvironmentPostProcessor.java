@@ -22,6 +22,7 @@ public class DotenvEnvironmentPostProcessor {
 
     private static final String ENV_FILE_PATH = ".env";
     private static final Map<String, String> envProperties = new HashMap<>();
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DotenvEnvironmentPostProcessor.class);
 
     static {
         loadEnvFile();
@@ -33,7 +34,7 @@ public class DotenvEnvironmentPostProcessor {
     private static void loadEnvFile() {
         File envFile = new File(ENV_FILE_PATH);
         if (envFile.exists()) {
-            log.info("Loading .env file from: {}", envFile.getAbsolutePath());
+            LOGGER.info("Loading .env file from: {}", envFile.getAbsolutePath());
             try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -54,16 +55,16 @@ public class DotenvEnvironmentPostProcessor {
                                 value = value.substring(1, value.length() - 1);
                             }
                             envProperties.put(key, value);
-                            log.debug("Loaded .env property: {}", key);
+                            LOGGER.debug("Loaded .env property: {}", key);
                         }
                     }
                 }
-                log.info(".env file loaded successfully with {} properties", envProperties.size());
+                LOGGER.info(".env file loaded successfully with {} properties", envProperties.size());
             } catch (IOException e) {
-                log.warn("Failed to load .env file: {}. Falling back to system environment", e.getMessage());
+                LOGGER.warn("Failed to load .env file: {}. Falling back to system environment", e.getMessage());
             }
         } else {
-            log.info(".env file not found at {}. Will use system environment variables and application.properties", ENV_FILE_PATH);
+            LOGGER.info(".env file not found at {}. Will use system environment variables and application.properties", ENV_FILE_PATH);
         }
     }
 
@@ -75,10 +76,10 @@ public class DotenvEnvironmentPostProcessor {
         if (value == null) {
             value = System.getenv(key);
             if (value != null) {
-                log.debug("Using system environment variable for: {}", key);
+                LOGGER.debug("Using system environment variable for: {}", key);
             }
         } else {
-            log.debug("Using .env variable for: {}", key);
+            LOGGER.debug("Using .env variable for: {}", key);
         }
         return value;
     }

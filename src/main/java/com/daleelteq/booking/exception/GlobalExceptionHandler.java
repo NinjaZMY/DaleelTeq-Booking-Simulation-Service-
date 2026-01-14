@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
                 "Unprocessable Entity",
                 ex.getMessage()
         );
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(response);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
