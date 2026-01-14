@@ -84,8 +84,13 @@ public class EmployeeRestController {
     public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployeeByBody(@RequestBody IdRequestDto dto) {
         logger.info("PUT /api/employees (JSON body) - Update employee with id: {}", dto.getId());
         try {
+            if (dto.getId() == null) {
+                throw new IllegalArgumentException("Missing 'id' in request body");
+            }
+            // Fetch existing employee first, then update if provided
+            EmployeeDto existing = employeeService.getEmployeeById(dto.getId());
             EmployeeDto employeeDto = EmployeeDto.builder()
-                    .lib(dto.getLib())
+                    .lib(existing.getLib()) // Keep existing lib if not provided
                     .build();
             EmployeeDto updated = employeeService.updateEmployee(dto.getId(), employeeDto);
             return ResponseEntity.ok(ApiResponse.success(updated, "Employee updated successfully"));
