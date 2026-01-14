@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Red Solitude (brightness level 0)",
+    "workbench.colorTheme": "Base16 Dark Monokai",
     "java.compile.nullAnalysis.mode": "disabled",
     "java.configuration.updateBuildConfiguration": "interactive"
 }
