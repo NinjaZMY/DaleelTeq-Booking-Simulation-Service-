@@ -18,7 +18,7 @@ public class WebIndexController {
     private final ServiceRepository serviceRepository;
     private final EmployeeRepository employeeRepository;
     private final ClientRepository clientRepository;
-    private final EmployeeServiceRepository employeeServiceRepository;
+    private final EmployeeXServiceRepository employeeXServiceRepository;
     private final RendezVousRepository rendezVousRepository;
     private final NotificationRepository notificationRepository;
 
@@ -28,7 +28,7 @@ public class WebIndexController {
         model.addAttribute("services", serviceRepository.findAll());
         model.addAttribute("employees", employeeRepository.findAll());
         model.addAttribute("clients", clientRepository.findAll());
-        model.addAttribute("employeeServices", employeeServiceRepository.findAll());
+        model.addAttribute("employeeServices", employeeXServiceRepository.findAll());
         model.addAttribute("rendezvous", rendezVousRepository.findAll());
         model.addAttribute("notifications", notificationRepository.findAll());
 
@@ -42,10 +42,10 @@ public class WebIndexController {
         model.addAttribute("clientIds", clientRepository.findAll().stream()
                 .map(c -> c.getId())
                 .collect(Collectors.toList()));
-        model.addAttribute("esIds", employeeServiceRepository.findAll().stream()
+        model.addAttribute("esIds", employeeXServiceRepository.findAll().stream()
                 .map(es -> es.getId())
                 .collect(Collectors.toList()));
-        model.addAttribute("freeEsIds", employeeServiceRepository.findAllFree().stream()
+        model.addAttribute("freeEsIds", employeeXServiceRepository.findByStatus("free").stream()
                 .map(es -> es.getId())
                 .collect(Collectors.toList()));
         model.addAttribute("rendezvousIds", rendezVousRepository.findAll().stream()

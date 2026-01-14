@@ -15,6 +15,8 @@ public class IdRequestDto {
     private Long id;
     private Long idE;
     private Long idS;
+    private Long idES;    // For Rendez-vous ES reference
+    private Long idC;     // For Client reference
     private Boolean x2;
     private String start; // HH:mm
     private String end;   // HH:mm
