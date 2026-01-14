@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Base16 Dark Monokai",
+    "workbench.colorTheme": "Monokai Pro",
     "java.compile.nullAnalysis.mode": "disabled",
     "java.configuration.updateBuildConfiguration": "interactive"
 }
