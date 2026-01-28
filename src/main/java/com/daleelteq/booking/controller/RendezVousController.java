@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/rendezvous")
+@RequestMapping("/ui/rendezvous")
 @RequiredArgsConstructor
 public class RendezVousController {
 

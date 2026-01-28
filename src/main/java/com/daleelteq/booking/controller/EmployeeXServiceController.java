@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/es")
+@RequestMapping("/ui/es")
 @RequiredArgsConstructor
 public class EmployeeXServiceController {
 
