@@ -8,7 +8,6 @@ GRANT CREATE ON SCHEMA public TO booking_user;
 -- Grant default privileges for future objects
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO booking_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO booking_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON INDEXES TO booking_user;
 
 -- Grant permissions on existing public schema objects
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO booking_user;

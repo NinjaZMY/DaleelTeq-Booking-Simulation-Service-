@@ -17,8 +17,8 @@ public class EmployeeXServiceDto {
     private Long idS;
     private Boolean x2;
     private LocalDate date;
-    private LocalTime start;
-    private LocalTime end;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private Integer timeValue;
     private String status;
     private Instant createdAt;

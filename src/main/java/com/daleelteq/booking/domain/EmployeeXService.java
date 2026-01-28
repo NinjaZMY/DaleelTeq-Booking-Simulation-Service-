@@ -39,11 +39,11 @@ public class EmployeeXService {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(nullable = false)
-    private LocalTime start;
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
 
-    @Column(nullable = false)
-    private LocalTime end;
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
     @Column(nullable = false)
     private Integer timeValue;
