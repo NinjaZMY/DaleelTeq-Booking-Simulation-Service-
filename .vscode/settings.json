@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Andromeda Bordered",
+    "workbench.colorTheme": "Base16 Dark Atelier Heath",
     "java.compile.nullAnalysis.mode": "disabled",
     "java.configuration.updateBuildConfiguration": "interactive"
 }
