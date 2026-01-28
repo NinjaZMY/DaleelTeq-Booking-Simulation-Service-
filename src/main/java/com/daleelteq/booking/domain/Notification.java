@@ -34,7 +34,7 @@ public class Notification {
     @Column(nullable = false, length = 50)
     private String value;
 
-    @Column(nullable = false)
+    @Column(name="x_2",nullable = false)
     private Boolean x2;
 
     @Column(nullable = false)
