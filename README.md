@@ -388,6 +388,25 @@ Uses Reusable Singleton pattern for PostgreSQL container:
 mvn clean package -DskipTests
 ```
 
+## 🔀 API vs UI (Routing Conventions)
+
+This project exposes two separate HTTP surfaces to avoid route collisions:
+
+- API endpoints (machine-friendly JSON):
+  - Base path: `/api`
+  - Implemented by controllers under `src/main/java/com/daleelteq/booking/controller/rest`
+  - Example: `GET /api/clients` returns JSON list of clients
+
+- UI endpoints (browser-friendly views/Thymeleaf):
+  - Base path: `/ui` (the main interactive dashboard)
+  - Implemented by controllers under `src/main/java/com/daleelteq/booking/controller` and `.../controller/web`
+  - Example: `GET /ui/home` shows the Thymeleaf dashboard
+
+Important mapping notes:
+- The application root `/` is handled by `WebIndexController` (located at `controller/web`) and populates the model used by `index.html`.
+- Lightweight UI controllers use `/ui/*` to avoid accidentally shadowing `/` or any `/api/*` endpoints.
+- If you are calling the API from Postman/scripts, always use the `/api` routes. Use `/ui` or `/` for browser-based testing.
+
 ## 📝 Error Response Examples
 
 ### Entity Not Found
