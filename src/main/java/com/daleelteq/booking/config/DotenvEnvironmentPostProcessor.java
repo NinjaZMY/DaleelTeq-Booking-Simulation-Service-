@@ -1,13 +1,10 @@
 package com.daleelteq.booking.config;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,27 +16,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * EnvironmentPostProcessor to load .env file early in Spring Boot startup.
- * This runs before bean creation, ensuring DB credentials are available.
+ * ApplicationContextInitializer to load .env file early in Spring Boot startup.
+ * This is the proper approach for Spring Boot 4.x (EnvironmentPostProcessor is deprecated).
  * 
- * Loads .env file and adds properties to Spring's environment.
- * Falls back to system environment variables if .env is not found.
+ * This initializer:
+ * 1. Runs during ApplicationContext initialization
+ * 2. Loads .env file from project root
+ * 3. Adds properties to ConfigurableEnvironment
+ * 4. Makes DB credentials available before datasource bean creation
+ * 5. Falls back to application.properties defaults if .env not found
  */
-public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class DotenvEnvironmentPostProcessor implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     private static final String ENV_FILE_PATH = ".env";
     private static final Logger logger = LoggerFactory.getLogger(DotenvEnvironmentPostProcessor.class);
 
     @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        ConfigurableEnvironment environment = applicationContext.getEnvironment();
         Map<String, Object> envProperties = loadEnvFile();
         
         if (!envProperties.isEmpty()) {
-            logger.info("Loaded {} properties from .env file", envProperties.size());
+            logger.info("✓ Loaded {} properties from .env file", envProperties.size());
             MapPropertySource mapPropertySource = new MapPropertySource("dotenv", envProperties);
             environment.getPropertySources().addFirst(mapPropertySource);
         } else {
-            logger.info(".env file not found or empty. Using system environment variables and application.properties defaults");
+            logger.warn("✗ .env file not found or empty. Using system environment variables and application.properties defaults");
         }
     }
 
@@ -83,7 +85,7 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
                     }
                     
                     envProperties.put(key, value);
-                    logger.debug("Line {}: Loaded property {}={}", lineNumber, key, maskPassword(key, value));
+                    logger.debug("  Line {}: {} = {}", lineNumber, key, maskPassword(key, value));
                 }
             }
             

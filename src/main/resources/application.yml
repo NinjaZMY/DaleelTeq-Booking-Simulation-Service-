@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: DaleelTeq-Booking-Service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/booking_db
+    username: ${DB_USERNAME:user_not_found}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+      additional-paths: src/
+      exclude: "**/static/**, **/public/**, **/templates/**, **/META-INF/maven/**, **/META-INF/resources/**, **/resources/**, **/META-INF/**, **/logback.xml, **/logback-spring.xml"
+  thymeleaf:
+    mode: HTML
+    cache: false
+    prefix: "classpath:/templates/"
+    suffix: .html
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+app:
+  time-window:
+    start: 09:00
+    end: 16:00
+

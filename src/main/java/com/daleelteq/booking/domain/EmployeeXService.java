@@ -33,7 +33,7 @@ public class EmployeeXService {
     @Column(name = "id_s", nullable = false)
     private Long idS;
 
-    @Column(nullable = false)
+    @Column(name="x_2",nullable = false)
     private Boolean x2;
 
     @Column(nullable = false)
