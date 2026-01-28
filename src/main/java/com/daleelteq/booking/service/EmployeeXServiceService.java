@@ -76,7 +76,7 @@ public class EmployeeXServiceService {
         }
 
         // Validate start time is within allowed window
-        if (dto.getStart() == null) {
+        if (dto.getStartTime() == null) {
             throw new ValidationException(
                     String.format("Invalid time: start time is required. Valid time window: %s to %s",
                             timeWindowConfig.getStart(), timeWindowConfig.getEnd())
@@ -88,13 +88,13 @@ public class EmployeeXServiceService {
         int computedTimeValue = (dto.getX2() != null && dto.getX2()) ? baseTimeValue * 2 : baseTimeValue;
 
         // Validate start time is within window and compute end time
-        LocalTime computedEnd = dto.getStart().plusMinutes(computedTimeValue);
+        LocalTime computedEnd = dto.getStartTime().plusMinutes(computedTimeValue);
 
-        if (dto.getStart().isBefore(timeWindowConfig.getStart()) || dto.getStart().isAfter(timeWindowConfig.getEnd())) {
+        if (dto.getStartTime().isBefore(timeWindowConfig.getStart()) || dto.getStartTime().isAfter(timeWindowConfig.getEnd())) {
             throw new ValidationException(
                     String.format("Invalid start time: %s is outside allowed window %s to %s. " +
                                     "For a %d-minute slot, start must be between %s and %s.",
-                            dto.getStart(), timeWindowConfig.getStart(), timeWindowConfig.getEnd(),
+                            dto.getStartTime(), timeWindowConfig.getStart(), timeWindowConfig.getEnd(),
                             computedTimeValue,
                             timeWindowConfig.getStart(),
                             timeWindowConfig.getEnd().minusMinutes(computedTimeValue))
@@ -118,7 +118,7 @@ public class EmployeeXServiceService {
                 .idS(dto.getIdS())
                 .x2(dto.getX2() != null ? dto.getX2() : false)
                 .date(dto.getDate())
-                .startTime(dto.getStart())
+                .startTime(dto.getStartTime())
                 .endTime(computedEnd)
                 .timeValue(computedTimeValue)
                 .status("free")
@@ -126,7 +126,7 @@ public class EmployeeXServiceService {
 
         EmployeeXService saved = esRepository.save(es);
         log.info("ES created successfully with id: {}. Start: {}, End: {}, TimeValue: {}, X2: {}",
-                saved.getId(), saved.getStart(), saved.getEnd(), saved.getTimeValue(), saved.getX2());
+                saved.getId(), saved.getStartTime(), saved.getEndTime(), saved.getTimeValue(), saved.getX2());
 
         return toDto(saved);
     }
@@ -147,8 +147,8 @@ public class EmployeeXServiceService {
                 });
 
         // If start time or x2 changes, recompute end time
-        if (dto.getStart() != null || dto.getX2() != null) {
-            LocalTime newStart = dto.getStart() != null ? dto.getStart() : es.getStart();
+        if (dto.getStartTime() != null || dto.getX2() != null) {
+            LocalTime newStart = dto.getStartTime() != null ? dto.getStartTime() : es.getStartTime();
             Integer timeValue = es.getTimeValue();
 
             // Validate new start time
@@ -167,8 +167,8 @@ public class EmployeeXServiceService {
                 );
             }
 
-            es.setStart(newStart);
-            es.setEnd(newEnd);
+            es.setStartTime(newStart);
+            es.setEndTime(newEnd);
         }
 
         if (dto.getDate() != null) {
@@ -249,8 +249,8 @@ public class EmployeeXServiceService {
                 .idS(es.getIdS())
                 .x2(es.getX2())
                 .date(es.getDate())
-                .start(es.getStart())
-                .end(es.getEnd())
+                .startTime(es.getStartTime())
+                .endTime(es.getEndTime())
                 .timeValue(es.getTimeValue())
                 .status(es.getStatus())
                 .createdAt(es.getCreatedAt())

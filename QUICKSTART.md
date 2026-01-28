@@ -14,34 +14,31 @@ Stop with `Ctrl+C` when ready to configure database.
 
 ### Step 2: Database Setup (5 minutes)
 
-Open PostgreSQL:
+**Prerequisites**: PostgreSQL 18 installed and running
 
+#### 2.1 Grant Permissions (as postgres superuser)
 ```bash
-psql -U postgres
+psql -U postgres -d booking_db -f setup-db-permissions.sql
 ```
 
-Execute:
-
-```sql
-CREATE DATABASE booking_db;
-CREATE USER booking_user WITH PASSWORD 'changeme';
-GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
-\q
-```
-
-Load schema:
-
+#### 2.2 Create Tables and Sample Data (as booking_user)
 ```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
 ```
 
-Verify:
+#### 2.3 Verify Tables Created
+```bash
+psql -U booking_user -d booking_db -c "\dt"
+```
 
+Expected output: 6 tables (clients, employee_x_services, employees, es_notification, rendez_vous, services)
+
+#### 2.4 Verify Sample Data
 ```bash
 psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
 
-Expected: **4**
+Expected: **4** services
 
 ### Step 3: Create `.env` File
 

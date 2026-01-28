@@ -104,7 +104,7 @@ public class EmployeeXServiceRestController {
             }
             EmployeeXServiceDto esDto = EmployeeXServiceDto.builder()
                     .id(dto.getId())
-                    .start(dto.getStart() != null ? java.time.LocalTime.parse(dto.getStart()) : null)
+                    .startTime(dto.getStart() != null ? java.time.LocalTime.parse(dto.getStart()) : null)
                     .date(dto.getDate() != null ? java.time.LocalDate.parse(dto.getDate()) : null)
                     .x2(dto.getX2())
                     .status(dto.getStatus())

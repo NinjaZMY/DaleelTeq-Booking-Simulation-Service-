@@ -1,67 +1,46 @@
-# PostgreSQL 18 Database Setup - Copy & Paste Commands
+# PostgreSQL 18 Database Setup
 
-## Windows Command Prompt
+## Prerequisites
+- PostgreSQL 18 installed and running
+- Database `booking_db` and user `booking_user` created with password `changeme`
 
-```cmd
-REM Step 1: Connect to PostgreSQL as superuser
-psql -U postgres
+## Setup Steps
 
-REM In psql, paste this SQL:
-CREATE DATABASE booking_db;
-CREATE USER booking_user WITH PASSWORD 'changeme';
-GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
-\q
-
-REM Step 2: Load the schema (from project directory)
-psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
-
-REM Step 3: Verify (optional)
-psql -U booking_user -d booking_db -c "SELECT COUNT(*) as services FROM services;"
-```
-
-## Windows PowerShell (as Admin)
-
-```powershell
-# Step 1: Start PostgreSQL service if not running
-net start PostgreSQL
-
-# Step 2: Connect and create database
-psql -U postgres
-
-# In psql, paste this SQL:
-# CREATE DATABASE booking_db;
-# CREATE USER booking_user WITH PASSWORD 'changeme';
-# GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
-# \q
-
-# Step 3: Load schema
-psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
-
-# Step 4: Verify
-psql -U booking_user -d booking_db -c "SELECT COUNT(*) as total FROM services;"
-```
-
-## macOS / Linux
-
+### Step 1: Grant Permissions (as postgres superuser)
 ```bash
-# Step 1: Start PostgreSQL (if using Homebrew on Mac)
-brew services start postgresql@18
+psql -U postgres -d booking_db -f setup-db-permissions.sql
+```
 
-# Step 2: Connect as superuser
-psql -U postgres
-
-# In psql, paste this SQL:
-# CREATE DATABASE booking_db;
-# CREATE USER booking_user WITH PASSWORD 'changeme';
-# GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
-# \q
-
-# Step 3: Load schema
+### Step 2: Create Schema (as booking_user)
+```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
+```
 
-# Step 4: Verify
+### Step 3: Verify Tables Created
+```bash
+psql -U booking_user -d booking_db -c "\dt"
+```
+
+Expected output:
+```
+         List of relations
+ Schema |           Name            | Type  |     Owner
+--------+---------------------------+-------+-----------
+ public | clients                   | table | booking_user
+ public | employee_x_services       | table | booking_user
+ public | employees                 | table | booking_user
+ public | es_notification           | table | booking_user
+ public | rendez_vous               | table | booking_user
+ public | services                  | table | booking_user
+(6 rows)
+```
+
+### Step 4: Verify Sample Data
+```bash
 psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
+
+Expected: **4** services
 
 ## Troubleshooting
 
