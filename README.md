@@ -112,7 +112,15 @@ GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
 \q
 ```
 
-#### Step 2: Load Schema
+#### Step 2: Grant Schema Permissions (as postgres superuser)
+
+```bash
+psql -U postgres -d booking_db -f setup-db-permissions.sql
+```
+
+This grants the `booking_user` permission to create tables in the public schema.
+
+#### Step 3: Create Schema (as booking_user)
 
 ```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
@@ -123,13 +131,21 @@ The schema will:
 - Add indexes for performance
 - Insert sample data (4 services, 3 employees, 3 clients)
 
-### 4. Verify Database Connection
+#### Step 4: Verify Tables Created
+
+```bash
+psql -U booking_user -d booking_db -c "\dt"
+```
+
+Expected output: 6 tables (clients, employee_x_services, employees, es_notification, rendez_vous, services)
+
+#### Step 5: Verify Sample Data
 
 ```bash
 psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
 
-Expected output: 4 rows
+Expected: **4** services
 
 ## ▶️ Running the Application
 

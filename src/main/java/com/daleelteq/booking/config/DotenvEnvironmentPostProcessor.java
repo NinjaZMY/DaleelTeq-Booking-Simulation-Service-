@@ -1,7 +1,15 @@
 package com.daleelteq.booking.config;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,84 +19,91 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Environment loader to load .env file and merge with system environment.
- * Falls back to system environment variables if .env is not found.
+ * EnvironmentPostProcessor to load .env file early in Spring Boot startup.
+ * This runs before bean creation, ensuring DB credentials are available.
  * 
- * For Spring Boot 4.x compatibility, loads .env file manually without external Dotenv library.
+ * Loads .env file and adds properties to Spring's environment.
+ * Falls back to system environment variables if .env is not found.
  */
-@Slf4j
-@Configuration
-public class DotenvEnvironmentPostProcessor {
+public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     private static final String ENV_FILE_PATH = ".env";
-    private static final Map<String, String> envProperties = new HashMap<>();
-    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DotenvEnvironmentPostProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(DotenvEnvironmentPostProcessor.class);
 
-    static {
-        loadEnvFile();
-    }
-
-    /**
-     * Load .env file manually into a map
-     */
-    private static void loadEnvFile() {
-        File envFile = new File(ENV_FILE_PATH);
-        if (envFile.exists()) {
-            LOGGER.info("Loading .env file from: {}", envFile.getAbsolutePath());
-            try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // Skip comments and empty lines
-                    if (line.trim().isEmpty() || line.trim().startsWith("#")) {
-                        continue;
-                    }
-                    
-                    // Parse KEY=VALUE
-                    if (line.contains("=")) {
-                        String[] parts = line.split("=", 2);
-                        if (parts.length == 2) {
-                            String key = parts[0].trim();
-                            String value = parts[1].trim();
-                            // Remove quotes if present
-                            if ((value.startsWith("\"") && value.endsWith("\"")) ||
-                                (value.startsWith("'") && value.endsWith("'"))) {
-                                value = value.substring(1, value.length() - 1);
-                            }
-                            envProperties.put(key, value);
-                            LOGGER.debug("Loaded .env property: {}", key);
-                        }
-                    }
-                }
-                LOGGER.info(".env file loaded successfully with {} properties", envProperties.size());
-            } catch (IOException e) {
-                LOGGER.warn("Failed to load .env file: {}. Falling back to system environment", e.getMessage());
-            }
+    @Override
+    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+        Map<String, Object> envProperties = loadEnvFile();
+        
+        if (!envProperties.isEmpty()) {
+            logger.info("Loaded {} properties from .env file", envProperties.size());
+            MapPropertySource mapPropertySource = new MapPropertySource("dotenv", envProperties);
+            environment.getPropertySources().addFirst(mapPropertySource);
         } else {
-            LOGGER.info(".env file not found at {}. Will use system environment variables and application.properties", ENV_FILE_PATH);
+            logger.info(".env file not found or empty. Using system environment variables and application.properties defaults");
         }
     }
 
     /**
-     * Get environment variable from .env or system environment
+     * Load .env file and return properties as a map
      */
-    public static String getEnv(String key) {
-        String value = envProperties.get(key);
-        if (value == null) {
-            value = System.getenv(key);
-            if (value != null) {
-                LOGGER.debug("Using system environment variable for: {}", key);
+    private Map<String, Object> loadEnvFile() {
+        Map<String, Object> envProperties = new HashMap<>();
+        File envFile = new File(ENV_FILE_PATH);
+        
+        if (!envFile.exists()) {
+            logger.debug(".env file not found at: {}", envFile.getAbsolutePath());
+            return envProperties;
+        }
+
+        logger.info("Loading .env file from: {}", envFile.getAbsolutePath());
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
+            String line;
+            int lineNumber = 0;
+            
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                
+                // Skip comments and empty lines
+                String trimmedLine = line.trim();
+                if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) {
+                    continue;
+                }
+                
+                // Parse KEY=VALUE
+                int delimiterIndex = line.indexOf('=');
+                if (delimiterIndex > 0) {
+                    String key = line.substring(0, delimiterIndex).trim();
+                    String value = line.substring(delimiterIndex + 1).trim();
+                    
+                    // Remove quotes if present
+                    if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                        (value.startsWith("'") && value.endsWith("'"))) {
+                        value = value.substring(1, value.length() - 1);
+                    }
+                    
+                    envProperties.put(key, value);
+                    logger.debug("Line {}: Loaded property {}={}", lineNumber, key, maskPassword(key, value));
+                }
             }
-        } else {
-            LOGGER.debug("Using .env variable for: {}", key);
+            
+            logger.info(".env file loaded successfully with {} properties", envProperties.size());
+            
+        } catch (IOException e) {
+            logger.error("Failed to load .env file: {}", e.getMessage());
+        }
+        
+        return envProperties;
+    }
+    
+    /**
+     * Mask password values in logs for security
+     */
+    private String maskPassword(String key, String value) {
+        if (key.toLowerCase().contains("password") || key.toLowerCase().contains("secret")) {
+            return "***";
         }
         return value;
     }
-
-    /**
-     * Get environment variable with fallback default value
-     */
-    public static String getEnv(String key, String defaultValue) {
-        String value = getEnv(key);
-        return value != null ? value : defaultValue;
-    }
 }
+
