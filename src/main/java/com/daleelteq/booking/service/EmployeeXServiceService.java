@@ -118,8 +118,8 @@ public class EmployeeXServiceService {
                 .idS(dto.getIdS())
                 .x2(dto.getX2() != null ? dto.getX2() : false)
                 .date(dto.getDate())
-                .start(dto.getStart())
-                .end(computedEnd)
+                .startTime(dto.getStart())
+                .endTime(computedEnd)
                 .timeValue(computedTimeValue)
                 .status("free")
                 .build();
