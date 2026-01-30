@@ -253,9 +253,29 @@
             background-color: white;
             padding: 30px;
             border-radius: 8px;
-            text-align: center;
-            max-width: 400px;
+            text-align: left;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: #000;
         }
 
         .modal-content h2 {
@@ -343,6 +363,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedServices()">Delete Selected Services</button>
+                <button class="btn-primary" onclick="showRowsModal('services')">Show Rows</button>
             </div>
              <h4>Available Services:</h4>
              <ul class="data-list" id="servicesList"></ul>
@@ -360,6 +381,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedEmployees()">Delete Selected Employees</button>
+                <button class="btn-primary" onclick="showRowsModal('employees')">Show Rows</button>
             </div>
             <h4>Available Employees:</h4>
             <ul class="data-list" id="employeesList"></ul>
@@ -381,6 +403,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedClients()">Delete Selected Clients</button>
+                <button class="btn-primary" onclick="showRowsModal('clients')">Show Rows</button>
             </div>
             <h4>Available Clients:</h4>
             <ul class="data-list" id="clientsList"></ul>
@@ -414,6 +437,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedES()">Delete Selected Timeslots</button>
+                <button class="btn-primary" onclick="showRowsModal('es')">Show Rows</button>
             </div>
              <h4>Available Timeslots:</h4>
              <ul class="data-list" id="esList"></ul>
@@ -435,6 +459,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedRendezVous()">Delete Selected Bookings</button>
+                <button class="btn-primary" onclick="showRowsModal('rendezvous')">Show Rows</button>
             </div>
              <h4>Active Rendez-vous:</h4>
              <ul class="data-list" id="rvList"></ul>
@@ -459,6 +484,7 @@
             </div>
             <div style="margin-top:8px;">
                 <button class="btn-warning" onclick="deleteSelectedNotifications()">Delete Selected Notifications</button>
+                <button class="btn-primary" onclick="showRowsModal('notifications')">Show Rows</button>
             </div>
              <h4>Notifications:</h4>
              <ul class="data-list" id="notificationsList"></ul>
@@ -466,12 +492,19 @@
 
         <div class="result-box">
             <h3>📊 Response & Status</h3>
-                <div class="result-content" id="resultBox">API responses will appear here...</div>
+            <div class="button-group" style="margin-bottom:12px;">
+                <button class="btn-primary" onclick="refreshData()">Refresh Data</button>
+                <button class="btn-primary" onclick="openResultModal()">Show in Modal</button>
+            </div>
+            <div class="button-group">
+                <button class="btn-warning" onclick="openClearDBModal()">Clear All Database</button>
+            </div>
+            <div class="result-content" id="resultBox">API responses will appear here...</div>
             <!-- Quick API tester (method + endpoint + JSON payload) -->
             <div style="margin-top:12px;">
                 <label><strong>Raw API Tester</strong></label>
                 <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;margin-top:8px;">
-                    <input type="text" id="rawEndpoint" placeholder="/api/services" value="/api/services">
+                    <input type="text" id="rawEndpoint" placeholder="/api/services">
                     <select id="rawMethod">
                         <option>GET</option>
                         <option>POST</option>
@@ -506,10 +539,23 @@
 <!-- Response Modal -->
 <div id="responseModal" class="modal">
     <div class="modal-content">
-        <h2 id="responseTitle">Response</h2>
+        <button class="modal-close" onclick="closeResponseModal()">×</button>
+        <h2 id="responseTitle" style="margin-top:20px;">Response</h2>
         <p id="responseStatus"></p>
-        <pre id="responseBody" style="text-align:left;max-height:300px;overflow:auto;background:#f8f9fa;padding:10px;border-radius:6px;border:1px solid #ddd;"></pre>
-        <div style="margin-top:12px;"><button class="btn-primary" onclick="closeResponseModal()">Close</button></div>
+        <pre id="responseBody" style="text-align:left;max-height:500px;overflow:auto;background:#f8f9fa;padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85em;"></pre>
+    </div>
+</div>
+
+<!-- Show Rows Modal -->
+<div id="rowsModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeRowsModal()">×</button>
+        <h2 id="rowsModalTitle" style="margin-top:20px;">Rows</h2>
+        <div id="rowsModalBody" style="overflow-y:auto;max-height:500px;"></div>
+        <div style="margin-top:15px;">
+            <button class="btn-warning" onclick="deleteSelectedFromModal()">Delete Selected</button>
+            <button class="btn-primary" onclick="closeRowsModal()" style="float:right;">Close</button>
+        </div>
     </div>
 </div>
 
@@ -582,7 +628,7 @@
 
      function loadClients() {
          fetch(`${API_BASE}/clients`)
-             .then r => r.json())
+             .then(r => r.json())
              .then(data => {
                 const list = document.getElementById('clientsList');
                 list.innerHTML = data.map(c => `<li>
@@ -846,10 +892,28 @@
         .catch(e => log('Error: ' + e.message, true));
     }
 
+    // Close modals on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeResponseModal();
+            closeRowsModal();
+            closeClearDBModal();
+        }
+    });
+
     // Close modal when clicking outside
     window.onclick = function(event) {
-        const modal = document.getElementById('clearDBModal');
-        if (event.target === modal) {
+        const responseModal = document.getElementById('responseModal');
+        const rowsModal = document.getElementById('rowsModal');
+        const clearDBModal = document.getElementById('clearDBModal');
+
+        if (event.target === responseModal) {
+            closeResponseModal();
+        }
+        if (event.target === rowsModal) {
+            closeRowsModal();
+        }
+        if (event.target === clearDBModal) {
             closeClearDBModal();
         }
     }
@@ -880,13 +944,101 @@
         if (method !== 'GET' && method !== 'DELETE') {
             try { opts.headers = {'Content-Type':'application/json'}; opts.body = body; } catch(e){}
         }
-        const full = ep.startsWith('http') ? ep : (API_BASE + (ep.startsWith('/')?ep:'/'+ep));
+        // Use endpoint as provided - don't modify it
+        const full = ep.startsWith('http') ? ep : (ep.startsWith('/') ? (API_BASE + ep) : ('/' + ep));
         fetch(full, opts)
             .then(async r => { const b = await r.text(); let parsed; try { parsed = JSON.parse(b); } catch(e){ parsed = b; } showResponse(full + ' ['+r.status+']', r.status>=400, parsed); })
             .catch(e => showResponse('Network Error', true, { message: e.message }));
     }
 
     function clearRaw() { document.getElementById('rawBody').value = ''; }
+
+    // Open result modal
+    function openResultModal() {
+        const modal = document.getElementById('responseModal');
+        modal.classList.add('show');
+    }
+
+    // Show rows in modal for entity
+    let currentRowsEntity = null;
+    function showRowsModal(entity) {
+        currentRowsEntity = entity;
+        const modal = document.getElementById('rowsModal');
+        const title = document.getElementById('rowsModalTitle');
+        const body = document.getElementById('rowsModalBody');
+
+        // Map entity type to API endpoint and list ID
+        const config = {
+            services: { api: 'services', label: 'Services' },
+            employees: { api: 'employees', label: 'Employees' },
+            clients: { api: 'clients', label: 'Clients' },
+            es: { api: 'es', label: 'Timeslots (ES)' },
+            rendezvous: { api: 'rendezvous', label: 'Rendez-vous' },
+            notifications: { api: 'notifications', label: 'Notifications' }
+        };
+
+        if (!config[entity]) return;
+        title.textContent = config[entity].label;
+
+        fetch(`${API_BASE}/${config[entity].api}`)
+            .then(r => r.json())
+            .then(data => {
+                let html = '<table style="width:100%;border-collapse:collapse;"><tr style="background:#f0f0f0;"><th style="padding:8px;border:1px solid #ddd;">Select</th>';
+
+                if (entity === 'services') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Duration</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(s => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${s.id}"></td><td style="padding:8px;border:1px solid #ddd;">${s.id}</td><td style="padding:8px;border:1px solid #ddd;">${s.lib}</td><td style="padding:8px;border:1px solid #ddd;">${s.timeValue}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editService(${s.id})" style="margin-right:4px;">Edit</button><button onclick="deleteService(${s.id})">Delete</button></td></tr>`;
+                    });
+                } else if (entity === 'employees') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(e => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${e.id}"></td><td style="padding:8px;border:1px solid #ddd;">${e.id}</td><td style="padding:8px;border:1px solid #ddd;">${e.lib}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editEmployee(${e.id})" style="margin-right:4px;">Edit</button><button onclick="deleteEmployee(${e.id})">Delete</button></td></tr>`;
+                    });
+                } else if (entity === 'clients') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Phone</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(c => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${c.id}"></td><td style="padding:8px;border:1px solid #ddd;">${c.id}</td><td style="padding:8px;border:1px solid #ddd;">${c.lib}</td><td style="padding:8px;border:1px solid #ddd;">${c.number}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editClient(${c.id})" style="margin-right:4px;">Edit</button><button onclick="deleteClient(${c.id})">Delete</button></td></tr>`;
+                    });
+                } else if (entity === 'es') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Date</th><th style="padding:8px;border:1px solid #ddd;">Time</th><th style="padding:8px;border:1px solid #ddd;">Status</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(es => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${es.id}"></td><td style="padding:8px;border:1px solid #ddd;">${es.id}</td><td style="padding:8px;border:1px solid #ddd;">${es.date}</td><td style="padding:8px;border:1px solid #ddd;">${es.startTime || es.start}-${es.endTime || es.end}</td><td style="padding:8px;border:1px solid #ddd;">${es.status}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editES(${es.id})" style="margin-right:4px;">Edit</button><button onclick="deleteES(${es.id})">Delete</button></td></tr>`;
+                    });
+                } else if (entity === 'rendezvous') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">ES ID</th><th style="padding:8px;border:1px solid #ddd;">Client ID</th><th style="padding:8px;border:1px solid #ddd;">Status</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(rv => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${rv.id}"></td><td style="padding:8px;border:1px solid #ddd;">${rv.id}</td><td style="padding:8px;border:1px solid #ddd;">${rv.idES}</td><td style="padding:8px;border:1px solid #ddd;">${rv.idC}</td><td style="padding:8px;border:1px solid #ddd;">${rv.status}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="cancelRendezVous(${rv.id})" style="margin-right:4px;">Cancel</button><button onclick="deleteRendezVous(${rv.id})">Delete</button></td></tr>`;
+                    });
+                } else if (entity === 'notifications') {
+                    html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Type</th><th style="padding:8px;border:1px solid #ddd;">Value</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
+                    data.forEach(n => {
+                        html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${n.id}"></td><td style="padding:8px;border:1px solid #ddd;">${n.id}</td><td style="padding:8px;border:1px solid #ddd;">${n.type}</td><td style="padding:8px;border:1px solid #ddd;">${n.value}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="deleteNotification(${n.id})">Delete</button></td></tr>`;
+                    });
+                }
+                html += '</table>';
+                body.innerHTML = html;
+                modal.classList.add('show');
+            });
+    }
+
+    function deleteSelectedFromModal() {
+        const sels = Array.from(document.querySelectorAll(`.sel-modal-${currentRowsEntity}:checked`)).map(n => n.dataset.id);
+        if (!sels.length) { showResponse('No selection', true, { message: 'No rows selected' }); return; }
+        if (!confirm('Delete selected?')) return;
+
+        const endpointMap = { services: 'services', employees: 'employees', clients: 'clients', es: 'es', rendezvous: 'rendezvous', notifications: 'notifications' };
+        const endpoint = endpointMap[currentRowsEntity];
+
+        Promise.all(sels.map(id => fetch(`${API_BASE}/${endpoint}/${id}`, { method: 'DELETE' })))
+            .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({status:204}) : r.json())))
+            .then(results => { showResponse('Delete Selected', false, results); refreshData(); closeRowsModal(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function closeRowsModal() {
+        document.getElementById('rowsModal').classList.remove('show');
+    }
 </script>
 </body>
 </html>
