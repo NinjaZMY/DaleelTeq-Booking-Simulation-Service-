@@ -341,9 +341,12 @@
                 <button class="btn-primary" onclick="createService()">Create Service</button>
                 <button class="btn-danger" onclick="deleteAllServices()">Delete All</button>
             </div>
-            <h4>Available Services:</h4>
-            <ul class="data-list" id="servicesList"></ul>
-        </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedServices()">Delete Selected Services</button>
+            </div>
+             <h4>Available Services:</h4>
+             <ul class="data-list" id="servicesList"></ul>
+         </div>
 
         <div class="section">
             <h3>👥 Employees</h3>
@@ -355,9 +358,12 @@
                 <button class="btn-primary" onclick="createEmployee()">Create Employee</button>
                 <button class="btn-danger" onclick="deleteAllEmployees()">Delete All</button>
             </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedEmployees()">Delete Selected Employees</button>
+            </div>
             <h4>Available Employees:</h4>
             <ul class="data-list" id="employeesList"></ul>
-        </div>
+         </div>
 
         <div class="section">
             <h3>👤 Clients</h3>
@@ -373,9 +379,12 @@
                 <button class="btn-primary" onclick="createClient()">Create Client</button>
                 <button class="btn-danger" onclick="deleteAllClients()">Delete All</button>
             </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedClients()">Delete Selected Clients</button>
+            </div>
             <h4>Available Clients:</h4>
             <ul class="data-list" id="clientsList"></ul>
-        </div>
+         </div>
 
         <div class="section">
             <h3>⏰ Timeslots (ES)</h3>
@@ -403,9 +412,12 @@
                 <button class="btn-primary" onclick="createES()">Create Timeslot</button>
                 <button class="btn-danger" onclick="deleteAllES()">Delete All</button>
             </div>
-            <h4>Available Timeslots:</h4>
-            <ul class="data-list" id="esList"></ul>
-        </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedES()">Delete Selected Timeslots</button>
+            </div>
+             <h4>Available Timeslots:</h4>
+             <ul class="data-list" id="esList"></ul>
+         </div>
 
         <div class="section">
             <h3>📋 Rendez-vous</h3>
@@ -421,9 +433,12 @@
                 <button class="btn-primary" onclick="bookRendezVous()">Book Appointment</button>
                 <button class="btn-danger" onclick="deleteAllRendezVous()">Delete All</button>
             </div>
-            <h4>Active Rendez-vous:</h4>
-            <ul class="data-list" id="rvList"></ul>
-        </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedRendezVous()">Delete Selected Bookings</button>
+            </div>
+             <h4>Active Rendez-vous:</h4>
+             <ul class="data-list" id="rvList"></ul>
+         </div>
 
         <div class="section">
             <h3>🔔 Notifications</h3>
@@ -442,16 +457,34 @@
                 <button class="btn-primary" onclick="createNotification()">Create Notification</button>
                 <button class="btn-danger" onclick="deleteAllNotifications()">Delete All</button>
             </div>
-            <h4>Notifications:</h4>
-            <ul class="data-list" id="notificationsList"></ul>
-        </div>
+            <div style="margin-top:8px;">
+                <button class="btn-warning" onclick="deleteSelectedNotifications()">Delete Selected Notifications</button>
+            </div>
+             <h4>Notifications:</h4>
+             <ul class="data-list" id="notificationsList"></ul>
+         </div>
 
         <div class="result-box">
             <h3>📊 Response & Status</h3>
-            <div class="result-content" id="resultBox">API responses will appear here...</div>
-            <div class="button-group" style="margin-top: 15px;">
-                <button class="btn-primary" onclick="refreshData()">Refresh Data</button>
-                <button class="btn-warning" onclick="openClearDBModal()">Clear All Database</button>
+                <div class="result-content" id="resultBox">API responses will appear here...</div>
+            <!-- Quick API tester (method + endpoint + JSON payload) -->
+            <div style="margin-top:12px;">
+                <label><strong>Raw API Tester</strong></label>
+                <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;margin-top:8px;">
+                    <input type="text" id="rawEndpoint" placeholder="/api/services" value="/api/services">
+                    <select id="rawMethod">
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>PUT</option>
+                        <option>DELETE</option>
+                        <option>PATCH</option>
+                    </select>
+                </div>
+                <textarea id="rawBody" style="width:100%;height:100px;margin-top:8px;padding:8px;border:1px solid #dee2e6;border-radius:4px;" placeholder='{"key":"value"}'></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="btn-primary" onclick="sendRawRequest()">Send</button>
+                    <button class="btn-warning" onclick="clearRaw()">Clear</button>
+                </div>
             </div>
         </div>
     </div>
@@ -470,8 +503,21 @@
     </div>
 </div>
 
+<!-- Response Modal -->
+<div id="responseModal" class="modal">
+    <div class="modal-content">
+        <h2 id="responseTitle">Response</h2>
+        <p id="responseStatus"></p>
+        <pre id="responseBody" style="text-align:left;max-height:300px;overflow:auto;background:#f8f9fa;padding:10px;border-radius:6px;border:1px solid #ddd;"></pre>
+        <div style="margin-top:12px;"><button class="btn-primary" onclick="closeResponseModal()">Close</button></div>
+    </div>
+</div>
+
 <script>
     const API_BASE = 'http://localhost:8080/api';
+    // local cache
+    const servicesById = {};
+    let editing = { type: null, id: null };
 
     // Load data on page load
     document.addEventListener('DOMContentLoaded', () => {
@@ -510,7 +556,14 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('servicesList');
-                list.innerHTML = data.map(s => `<li>ID ${s.id}: ${s.lib} (${s.timeValue} min)</li>`).join('');
+                list.innerHTML = data.map(s => {
+                    servicesById[s.id] = s.timeValue;
+                    return `<li>
+                        <input type="checkbox" class="sel-service" data-id="${s.id}"> ID ${s.id}: ${s.lib} (${s.timeValue} min)
+                        <button onclick="editService(${s.id})" style="margin-left:8px;">Edit</button>
+                        <button onclick="deleteService(${s.id})" style="margin-left:6px;">Delete</button>
+                    </li>`
+                }).join('');
             });
     }
 
@@ -519,45 +572,65 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('employeesList');
-                list.innerHTML = data.map(e => `<li>ID ${e.id}: ${e.lib}</li>`).join('');
-            });
-    }
+                list.innerHTML = data.map(e => `<li>
+                    <input type="checkbox" class="sel-employee" data-id="${e.id}"> ID ${e.id}: ${e.lib}
+                    <button onclick="editEmployee(${e.id})" style="margin-left:8px;">Edit</button>
+                    <button onclick="deleteEmployee(${e.id})" style="margin-left:6px;">Delete</button>
+                </li>`).join('');
+             });
+     }
 
-    function loadClients() {
-        fetch(`${API_BASE}/clients`)
-            .then(r => r.json())
-            .then(data => {
+     function loadClients() {
+         fetch(`${API_BASE}/clients`)
+             .then r => r.json())
+             .then(data => {
                 const list = document.getElementById('clientsList');
-                list.innerHTML = data.map(c => `<li>ID ${c.id}: ${c.lib} (${c.number})</li>`).join('');
-            });
-    }
+                list.innerHTML = data.map(c => `<li>
+                    <input type="checkbox" class="sel-client" data-id="${c.id}"> ID ${c.id}: ${c.lib} (${c.number})
+                    <button onclick="editClient(${c.id})" style="margin-left:8px;">Edit</button>
+                    <button onclick="deleteClient(${c.id})" style="margin-left:6px;">Delete</button>
+                </li>`).join('');
+             });
+     }
 
-    function loadES() {
-        fetch(`${API_BASE}/es`)
-            .then(r => r.json())
-            .then(data => {
+     function loadES() {
+         fetch(`${API_BASE}/es`)
+             .then(r => r.json())
+             .then(data => {
                 const list = document.getElementById('esList');
-                list.innerHTML = data.map(es => `<li>ID ${es.id}: ${es.date} ${es.start}-${es.end} [${es.status}]</li>`).join('');
-            });
-    }
+                list.innerHTML = data.map(es => `<li>
+                    <input type="checkbox" class="sel-es" data-id="${es.id}">
+                    ID ${es.id}: ${es.date} ${es.startTime || es.start || ''}-${es.endTime || es.end || ''} [${es.status}]
+                    <button onclick="editES(${es.id})" style="margin-left:8px;">Edit</button>
+                    <button onclick="deleteES(${es.id})" style="margin-left:6px;">Delete</button>
+                </li>`).join('');
+             });
+     }
 
-    function loadRendezVous() {
-        fetch(`${API_BASE}/rendezvous`)
-            .then(r => r.json())
-            .then(data => {
+     function loadRendezVous() {
+         fetch(`${API_BASE}/rendezvous`)
+             .then(r => r.json())
+             .then(data => {
                 const list = document.getElementById('rvList');
-                list.innerHTML = data.map(rv => `<li>ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]</li>`).join('');
-            });
-    }
+                list.innerHTML = data.map(rv => `<li>
+                    <input type="checkbox" class="sel-rv" data-id="${rv.id}"> ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]
+                    <button onclick="cancelRendezVous(${rv.id})" style="margin-left:8px;">Cancel</button>
+                    <button onclick="deleteRendezVous(${rv.id})" style="margin-left:6px;">Delete</button>
+                </li>`).join('');
+             });
+     }
 
-    function loadNotifications() {
-        fetch(`${API_BASE}/notifications`)
-            .then(r => r.json())
-            .then(data => {
+     function loadNotifications() {
+         fetch(`${API_BASE}/notifications`)
+             .then(r => r.json())
+             .then(data => {
                 const list = document.getElementById('notificationsList');
-                list.innerHTML = data.map(n => `<li>ID ${n.id}: ${n.type} - ${n.value}</li>`).join('');
-            });
-    }
+                list.innerHTML = data.map(n => `<li>
+                    <input type="checkbox" class="sel-notif" data-id="${n.id}"> ID ${n.id}: ${n.type} - ${n.value}
+                    <button onclick="deleteNotification(${n.id})" style="margin-left:8px;">Delete</button>
+                </li>`).join('');
+             });
+     }
 
     function createService() {
         const name = document.getElementById('serviceName').value;
@@ -573,85 +646,113 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lib: name, timeValue: parseInt(time) })
         })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
+        .then(async r => {
+            const body = await r.json().catch(()=>null);
+            showResponse('Create Service ['+r.status+']', r.status>=400, body || { status: r.status });
             refreshData();
         })
-        .catch(e => log('Error: ' + e.message, true));
+        .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
-    function createEmployee() {
-        const name = document.getElementById('employeeName').value;
-        if (!name) {
-            log('Please enter employee name', true);
-            return;
-        }
-
-        fetch(`${API_BASE}/employees`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lib: name })
-        })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
-            refreshData();
-        })
-        .catch(e => log('Error: ' + e.message, true));
+    // Edit service in-place using a prompt (simple UI)
+    function editService(id) {
+        const current = document.querySelector(`.sel-service[data-id="${id}"]`);
+        // fetch service details
+        fetch(`${API_BASE}/services/${id}`)
+            .then(r => r.json())
+            .then(s => {
+                const newName = prompt('Service name:', s.lib);
+                if (newName === null) return; // cancelled
+                const newTime = prompt('Time value (minutes):', s.timeValue);
+                if (newTime === null) return;
+                fetch(`${API_BASE}/services/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ lib: newName, timeValue: parseInt(newTime) })
+                }).then(async r => {
+                    const body = await r.json().catch(()=>null);
+                    showResponse('Update Service ['+r.status+']', r.status>=400, body || { status: r.status });
+                    refreshData();
+                }).catch(e => showResponse('Error', true, { message: e.message }));
+            }).catch(()=> showResponse('Error','true',{message:'Service fetch failed'}));
     }
 
-    function createClient() {
-        const name = document.getElementById('clientName').value;
-        const phone = document.getElementById('clientPhone').value;
-
-        if (!name || !phone) {
-            log('Please fill all fields', true);
-            return;
-        }
-
-        fetch(`${API_BASE}/clients`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lib: name, number: phone })
-        })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
-            refreshData();
-        })
-        .catch(e => log('Error: ' + e.message, true));
+    function deleteService(id) {
+        if (!confirm('Delete service ID '+id+'?')) return;
+        fetch(`${API_BASE}/services/${id}`, { method: 'DELETE' })
+            .then(r => {
+                if (r.status===204) showResponse('Delete Service','', { id });
+                else r.json().then(b => showResponse('Delete Service', r.status>=400, b));
+                refreshData();
+            }).catch(e => showResponse('Error', true, { message: e.message }));
     }
 
-    function createES() {
-        const empId = document.getElementById('esEmployeeId').value;
-        const srvId = document.getElementById('esServiceId').value;
-        const date = document.getElementById('esDate').value;
-        const start = document.getElementById('esStart').value;
-        const x2 = document.getElementById('esX2').checked;
+    function deleteSelectedServices() {
+        const sels = Array.from(document.querySelectorAll('.sel-service:checked')).map(n => n.dataset.id);
+        if (!sels.length) { showResponse('No selection', true, { message: 'No services selected' }); return; }
+        if (!confirm('Delete selected services: '+sels.join(','))) return;
+        // delete sequentially
+        Promise.all(sels.map(id => fetch(`${API_BASE}/services/${id}`, { method: 'DELETE' })))
+            .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({id:null,status:204}) : r.json())))
+            .then(results => { showResponse('Delete Selected Services', false, results); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
 
-        if (!empId || !srvId || !date || !start) {
-            log('Please fill all required fields', true);
-            return;
-        }
+    // ---------------- ES helpers: edit/delete/multi-delete ----------------
+    function editES(id) {
+        // fetch ES details
+        fetch(`${API_BASE}/es/${id}`)
+            .then(r => r.json())
+            .then(es => {
+                const newDate = prompt('Date (YYYY-MM-DD):', es.date);
+                if (newDate === null) return;
+                const newStart = prompt('Start time (HH:MM):', es.startTime || es.start || es.startTimeString || es.start);
+                if (newStart === null) return;
+                // keep x2 and other fields as-is
+                const payload = {
+                    id: id,
+                    idE: es.idE,
+                    idS: es.idS,
+                    date: newDate,
+                    startTime: newStart,
+                    x2: es.x2
+                };
+                // compute timeValue and endTime using service
+                const srvId = es.idS;
+                fetch(`${API_BASE}/services/${srvId}`).then(r=>r.json()).then(s=>{
+                    const duration = s.timeValue * (es.x2?2:1);
+                    payload.timeValue = duration;
+                    payload.endTime = computeEndTime(newStart, duration);
+                    fetch(`${API_BASE}/es/${id}`, {
+                        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+                    }).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update ES ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); });
+                }).catch(()=> showResponse('Error', true, { message: 'Service fetch failed' }));
+            });
+    }
 
-        fetch(`${API_BASE}/es`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                idE: parseInt(empId),
-                idS: parseInt(srvId),
-                date: date,
-                start: start,
-                x2: x2
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
-            refreshData();
-        })
-        .catch(e => log('Error: ' + e.message, true));
+    function deleteES(id) {
+        if (!confirm('Delete ES ID '+id+'?')) return;
+        fetch(`${API_BASE}/es/${id}`, { method: 'DELETE' })
+            .then(r=>{ if (r.status===204) showResponse('Delete ES', false, { id }); else r.json().then(b=>showResponse('Delete ES', r.status>=400, b)); refreshData(); })
+            .catch(e=>showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteSelectedES() {
+        const sels = Array.from(document.querySelectorAll('.sel-es:checked')).map(n => n.dataset.id);
+        if (!sels.length) { showResponse('No selection', true, { message: 'No ES selected' }); return; }
+        if (!confirm('Delete selected ES: '+sels.join(','))) return;
+        Promise.all(sels.map(id => fetch(`${API_BASE}/es/${id}`, { method: 'DELETE' })))
+            .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({id:null,status:204}) : r.json())))
+            .then(results => { showResponse('Delete Selected ES', false, results); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function computeEndTime(startHHMM, minutesToAdd) {
+        const [hh, mm] = startHHMM.split(':').map(Number);
+        const total = hh*60 + mm + minutesToAdd;
+        const endH = Math.floor(total/60)%24;
+        const endM = total%60;
+        return `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
     }
 
     function bookRendezVous() {
@@ -659,7 +760,7 @@
         const clientId = document.getElementById('rvClientId').value;
 
         if (!esId || !clientId) {
-            log('Please fill all fields', true);
+            showResponse('Missing fields', true, { message: 'Please fill all fields' });
             return;
         }
 
@@ -668,35 +769,52 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idES: parseInt(esId), idC: parseInt(clientId) })
         })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
-            refreshData();
-        })
-        .catch(e => log('Error: ' + e.message, true));
-    }
+        .then(async r => { const body = await r.json().catch(()=>null); showResponse('Book Rendez-vous ['+r.status+']', r.status>=400, body||{status:r.status}); refreshData(); })
+        .catch(e => showResponse('Error', true, { message: e.message }));
+     }
 
-    function createNotification() {
-        const rvId = document.getElementById('notifRVId').value;
-        const type = document.getElementById('notifType').value;
+     function createNotification() {
+         const rvId = document.getElementById('notifRVId').value;
+         const type = document.getElementById('notifType').value;
 
-        if (!rvId) {
-            log('Please enter Rendez-vous ID', true);
+         if (!rvId) {
+            showResponse('Missing field', true, { message: 'Please enter Rendez-vous ID' });
             return;
-        }
+         }
 
-        fetch(`${API_BASE}/notifications`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idR: parseInt(rvId), type: type })
-        })
-        .then(r => r.json())
-        .then(data => {
-            log(JSON.stringify(data, null, 2));
-            refreshData();
-        })
-        .catch(e => log('Error: ' + e.message, true));
-    }
+         fetch(`${API_BASE}/notifications`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ idR: parseInt(rvId), type: type })
+         })
+         .then(async r => { const body = await r.json().catch(()=>null); showResponse('Create Notification ['+r.status+']', r.status>=400, body||{status:r.status}); refreshData(); })
+         .catch(e => showResponse('Error', true, { message: e.message }));
+     }
++
++    // Employee edit/delete helpers
++    function editEmployee(id) {
++        fetch(`${API_BASE}/employees/${id}`).then(r=>r.json()).then(e=>{
++            const newName = prompt('Employee name:', e.lib); if (newName===null) return;
++            fetch(`${API_BASE}/employees/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ lib: newName }) })
++                .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Employee ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); });
++        });
++    }
++    function deleteEmployee(id){ if(!confirm('Delete employee '+id+'?')) return; fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Employee', false, {id}); else r.json().then(b=>showResponse('Delete Employee', r.status>=400, b)); refreshData();}); }
++    function deleteSelectedEmployees(){ const sels=Array.from(document.querySelectorAll('.sel-employee:checked')).map(n=>n.dataset.id); if(!sels.length) { showResponse('No selection', true, {message:'No employees selected'}); return;} if(!confirm('Delete selected employees: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Employees', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
++
++    // Client edit/delete helpers
++    function editClient(id){ fetch(`${API_BASE}/clients/${id}`).then(r=>r.json()).then(c=>{ const newName=prompt('Client name:', c.lib); if(newName===null) return; const newPhone=prompt('Phone:', c.number); if(newPhone===null) return; fetch(`${API_BASE}/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'}, body:JSON.stringify({ lib:newName, number:newPhone })}).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Client ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData();}); }); }
++    function deleteClient(id){ if(!confirm('Delete client '+id+'?')) return; fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Client', false, {id}); else r.json().then(b=>showResponse('Delete Client', r.status>=400, b)); refreshData();}); }
++    function deleteSelectedClients(){ const sels=Array.from(document.querySelectorAll('.sel-client:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No clients selected'}); return;} if(!confirm('Delete selected clients: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Clients', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
++
++    // Rendezvous helpers
++    function cancelRendezVous(id){ if(!confirm('Cancel rendez-vous '+id+'?')) return; fetch(`${API_BASE}/rendezvous/${id}/cancel`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status:'Cancelled by UI' }) }).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Cancel RV ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); }).catch(e=>showResponse('Error', true, {message:e.message})); }
++    function deleteRendezVous(id){ if(!confirm('Delete rendez-vous '+id+'?')) return; fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete RV', false, {id}); else r.json().then(b=>showResponse('Delete RV', r.status>=400, b)); refreshData();}); }
++    function deleteSelectedRendezVous(){ const sels=Array.from(document.querySelectorAll('.sel-rv:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No RV selected'}); return;} if(!confirm('Delete selected RV: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected RV', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
++
++    // Notifications helpers
++    function deleteNotification(id){ if(!confirm('Delete notification '+id+'?')) return; fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData();}); }
++    function deleteSelectedNotifications(){ const sels=Array.from(document.querySelectorAll('.sel-notif:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No notifications selected'}); return;} if(!confirm('Delete selected notifications: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Notifications', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
 
     function deleteAllServices() { if (confirm('Delete all services?')) fetch(`${API_BASE}/services/clear`, { method: 'DELETE' }).then(() => refreshData()); }
     function deleteAllEmployees() { if (confirm('Delete all employees?')) fetch(`${API_BASE}/employees/clear`, { method: 'DELETE' }).then(() => refreshData()); }
@@ -721,7 +839,7 @@
         })
         .then(r => r.json())
         .then(data => {
-            log(JSON.stringify(data, null, 2));
+            showResponse('Clear DB', false, data);
             closeClearDBModal();
             refreshData();
         })
@@ -735,6 +853,40 @@
             closeClearDBModal();
         }
     }
+
+    // Response modal helpers
+    function showResponse(title, isError, body) {
+        const modal = document.getElementById('responseModal');
+        document.getElementById('responseTitle').textContent = title;
+        document.getElementById('responseStatus').textContent = isError ? 'Error' : 'Success';
+        document.getElementById('responseBody').textContent = JSON.stringify(body, null, 2);
+        modal.classList.add('show');
+        // also update inline box
+        const rb = document.getElementById('resultBox');
+        rb.textContent = JSON.stringify(body, null, 2);
+        rb.className = isError ? 'result-content error' : 'result-content success';
+    }
+
+    function closeResponseModal() {
+        document.getElementById('responseModal').classList.remove('show');
+    }
+
+    // Raw API tester
+    function sendRawRequest() {
+        const ep = document.getElementById('rawEndpoint').value;
+        const method = document.getElementById('rawMethod').value;
+        const body = document.getElementById('rawBody').value;
+        let opts = { method };
+        if (method !== 'GET' && method !== 'DELETE') {
+            try { opts.headers = {'Content-Type':'application/json'}; opts.body = body; } catch(e){}
+        }
+        const full = ep.startsWith('http') ? ep : (API_BASE + (ep.startsWith('/')?ep:'/'+ep));
+        fetch(full, opts)
+            .then(async r => { const b = await r.text(); let parsed; try { parsed = JSON.parse(b); } catch(e){ parsed = b; } showResponse(full + ' ['+r.status+']', r.status>=400, parsed); })
+            .catch(e => showResponse('Network Error', true, { message: e.message }));
+    }
+
+    function clearRaw() { document.getElementById('rawBody').value = ''; }
 </script>
 </body>
 </html>
