@@ -586,7 +586,8 @@
                 document.getElementById('esCount').textContent = data.employeeXServices;
                 document.getElementById('rvCount').textContent = data.rendezVous;
                 document.getElementById('notificationsCount').textContent = data.notifications;
-            });
+            })
+            .catch(e => console.error('Error loading db-status:', e));
 
         // Load lists
         loadServices();
@@ -610,7 +611,8 @@
                         <button onclick="deleteService(${s.id})" style="margin-left:6px;">Delete</button>
                     </li>`
                 }).join('');
-            });
+            })
+            .catch(e => console.error('Error loading services:', e));
     }
 
     function loadEmployees() {
@@ -623,26 +625,28 @@
                     <button onclick="editEmployee(${e.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteEmployee(${e.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
-             });
-     }
+            })
+            .catch(e => console.error('Error loading employees:', e));
+    }
 
-     function loadClients() {
-         fetch(`${API_BASE}/clients`)
-             .then(r => r.json())
-             .then(data => {
+    function loadClients() {
+        fetch(`${API_BASE}/clients`)
+            .then(r => r.json())
+            .then(data => {
                 const list = document.getElementById('clientsList');
                 list.innerHTML = data.map(c => `<li>
                     <input type="checkbox" class="sel-client" data-id="${c.id}"> ID ${c.id}: ${c.lib} (${c.number})
                     <button onclick="editClient(${c.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteClient(${c.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
-             });
-     }
+            })
+            .catch(e => console.error('Error loading clients:', e));
+    }
 
-     function loadES() {
-         fetch(`${API_BASE}/es`)
-             .then(r => r.json())
-             .then(data => {
+    function loadES() {
+        fetch(`${API_BASE}/es`)
+            .then(r => r.json())
+            .then(data => {
                 const list = document.getElementById('esList');
                 list.innerHTML = data.map(es => `<li>
                     <input type="checkbox" class="sel-es" data-id="${es.id}">
@@ -650,33 +654,36 @@
                     <button onclick="editES(${es.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteES(${es.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
-             });
-     }
+            })
+            .catch(e => console.error('Error loading ES:', e));
+    }
 
-     function loadRendezVous() {
-         fetch(`${API_BASE}/rendezvous`)
-             .then(r => r.json())
-             .then(data => {
+    function loadRendezVous() {
+        fetch(`${API_BASE}/rendezvous`)
+            .then(r => r.json())
+            .then(data => {
                 const list = document.getElementById('rvList');
                 list.innerHTML = data.map(rv => `<li>
                     <input type="checkbox" class="sel-rv" data-id="${rv.id}"> ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]
                     <button onclick="cancelRendezVous(${rv.id})" style="margin-left:8px;">Cancel</button>
                     <button onclick="deleteRendezVous(${rv.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
-             });
-     }
+            })
+            .catch(e => console.error('Error loading rendez-vous:', e));
+    }
 
-     function loadNotifications() {
-         fetch(`${API_BASE}/notifications`)
-             .then(r => r.json())
-             .then(data => {
+    function loadNotifications() {
+        fetch(`${API_BASE}/notifications`)
+            .then(r => r.json())
+            .then(data => {
                 const list = document.getElementById('notificationsList');
                 list.innerHTML = data.map(n => `<li>
                     <input type="checkbox" class="sel-notif" data-id="${n.id}"> ID ${n.id}: ${n.type} - ${n.value}
                     <button onclick="deleteNotification(${n.id})" style="margin-left:8px;">Delete</button>
                 </li>`).join('');
-             });
-     }
+            })
+            .catch(e => console.error('Error loading notifications:', e));
+    }
 
     function createService() {
         const name = document.getElementById('serviceName').value;
