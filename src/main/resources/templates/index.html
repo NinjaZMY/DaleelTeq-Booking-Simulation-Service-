@@ -1101,32 +1101,32 @@
 
                 if (entity === 'services') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Duration</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(s => {
+                    data.data.forEach(s => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${s.id}"></td><td style="padding:8px;border:1px solid #ddd;">${s.id}</td><td style="padding:8px;border:1px solid #ddd;">${s.lib}</td><td style="padding:8px;border:1px solid #ddd;">${s.timeValue}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editService(${s.id})" style="margin-right:4px;">Edit</button><button onclick="deleteService(${s.id})">Delete</button></td></tr>`;
                     });
                 } else if (entity === 'employees') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(e => {
+                    data.data.forEach(e => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${e.id}"></td><td style="padding:8px;border:1px solid #ddd;">${e.id}</td><td style="padding:8px;border:1px solid #ddd;">${e.lib}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editEmployee(${e.id})" style="margin-right:4px;">Edit</button><button onclick="deleteEmployee(${e.id})">Delete</button></td></tr>`;
                     });
                 } else if (entity === 'clients') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Name</th><th style="padding:8px;border:1px solid #ddd;">Phone</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(c => {
+                    data.data.forEach(c => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${c.id}"></td><td style="padding:8px;border:1px solid #ddd;">${c.id}</td><td style="padding:8px;border:1px solid #ddd;">${c.lib}</td><td style="padding:8px;border:1px solid #ddd;">${c.number}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editClient(${c.id})" style="margin-right:4px;">Edit</button><button onclick="deleteClient(${c.id})">Delete</button></td></tr>`;
                     });
                 } else if (entity === 'es') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Date</th><th style="padding:8px;border:1px solid #ddd;">Time</th><th style="padding:8px;border:1px solid #ddd;">Status</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(es => {
+                    data.data.forEach(es => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${es.id}"></td><td style="padding:8px;border:1px solid #ddd;">${es.id}</td><td style="padding:8px;border:1px solid #ddd;">${es.date}</td><td style="padding:8px;border:1px solid #ddd;">${es.startTime || es.start}-${es.endTime || es.end}</td><td style="padding:8px;border:1px solid #ddd;">${es.status}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="editES(${es.id})" style="margin-right:4px;">Edit</button><button onclick="deleteES(${es.id})">Delete</button></td></tr>`;
                     });
                 } else if (entity === 'rendezvous') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">ES ID</th><th style="padding:8px;border:1px solid #ddd;">Client ID</th><th style="padding:8px;border:1px solid #ddd;">Status</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(rv => {
+                    data.data.forEach(rv => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${rv.id}"></td><td style="padding:8px;border:1px solid #ddd;">${rv.id}</td><td style="padding:8px;border:1px solid #ddd;">${rv.idES}</td><td style="padding:8px;border:1px solid #ddd;">${rv.idC}</td><td style="padding:8px;border:1px solid #ddd;">${rv.status}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="cancelRendezVous(${rv.id})" style="margin-right:4px;">Cancel</button><button onclick="deleteRendezVous(${rv.id})">Delete</button></td></tr>`;
                     });
                 } else if (entity === 'notifications') {
                     html += '<th style="padding:8px;border:1px solid #ddd;">ID</th><th style="padding:8px;border:1px solid #ddd;">Type</th><th style="padding:8px;border:1px solid #ddd;">Value</th><th style="padding:8px;border:1px solid #ddd;">Actions</th></tr>';
-                    data.forEach(n => {
+                    data.data.forEach(n => {
                         html += `<tr><td style="padding:8px;border:1px solid #ddd;"><input type="checkbox" class="sel-modal-${entity}" data-id="${n.id}"></td><td style="padding:8px;border:1px solid #ddd;">${n.id}</td><td style="padding:8px;border:1px solid #ddd;">${n.type}</td><td style="padding:8px;border:1px solid #ddd;">${n.value}</td><td style="padding:8px;border:1px solid #ddd;"><button onclick="deleteNotification(${n.id})">Delete</button></td></tr>`;
                     });
                 }
