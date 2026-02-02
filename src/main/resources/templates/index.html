@@ -843,31 +843,99 @@
          .then(async r => { const body = await r.json().catch(()=>null); showResponse('Create Notification ['+r.status+']', r.status>=400, body||{status:r.status}); refreshData(); })
          .catch(e => showResponse('Error', true, { message: e.message }));
      }
-+
-+    // Employee edit/delete helpers
-+    function editEmployee(id) {
-+        fetch(`${API_BASE}/employees/${id}`).then(r=>r.json()).then(e=>{
-+            const newName = prompt('Employee name:', e.lib); if (newName===null) return;
+
+    // Employee edit/delete helpers
+    function editEmployee(id) {
+        fetch(`${API_BASE}/employees/${id}`).then(r=>r.json()).then(e=>{
+            const newName = prompt('Employee name:', e.lib); if (newName===null) return;
             fetch(`${API_BASE}/employees/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ lib: newName }) })
                 .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Employee ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); });
         });
     }
     function deleteEmployee(id){ if(!confirm('Delete employee '+id+'?')) return; fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Employee', false, {id}); else r.json().then(b=>showResponse('Delete Employee', r.status>=400, b)); refreshData();}); }
-    function deleteSelectedEmployees(){ const sels=Array.from(document.querySelectorAll('.sel-employee:checked')).map(n=>n.dataset.id); if(!sels.length) { showResponse('No selection', true, {message:'No employees selected'}); return;} if(!confirm('Delete selected employees: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Employees', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
+    function deleteSelectedEmployees(){
+        const sels = Array.from(document.querySelectorAll('.sel-employee:checked')).map(n => n.dataset.id);
+        if(!sels.length) { showResponse('No selection', true, {message:'No employees selected'}); return; }
+        if(!confirm('Delete selected employees: '+sels.join(','))) return;
+        Promise.all(sels.map(id => fetch(`${API_BASE}/employees/${id}`, { method:'DELETE' })))
+            .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({status:204}) : r.json())))
+            .then(results => { showResponse('Delete Selected Employees', false, results); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
 
     // Client edit/delete helpers
-    function editClient(id){ fetch(`${API_BASE}/clients/${id}`).then(r=>r.json()).then(c=>{ const newName=prompt('Client name:', c.lib); if(newName===null) return; const newPhone=prompt('Phone:', c.number); if(newPhone===null) return; fetch(`${API_BASE}/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'}, body:JSON.stringify({ lib:newName, number:newPhone })}).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Client ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData();}); }); }
-    function deleteClient(id){ if(!confirm('Delete client '+id+'?')) return; fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Client', false, {id}); else r.json().then(b=>showResponse('Delete Client', r.status>=400, b)); refreshData();}); }
-    function deleteSelectedClients(){ const sels=Array.from(document.querySelectorAll('.sel-client:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No clients selected'}); return;} if(!confirm('Delete selected clients: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Clients', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
+    function editClient(id){
+        fetch(`${API_BASE}/clients/${id}`)
+            .then(r=>r.json())
+            .then(c => {
+                const newName = prompt('Client name:', c.lib); if (newName === null) return;
+                const newPhone = prompt('Phone:', c.number); if (newPhone === null) return;
+                fetch(`${API_BASE}/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'}, body:JSON.stringify({ lib:newName, number:newPhone })})
+                    .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Client ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); })
+                    .catch(e => showResponse('Error', true, { message: e.message }));
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteClient(id){
+        if(!confirm('Delete client '+id+'?')) return;
+        fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'})
+            .then(r=>{ if(r.status===204) showResponse('Delete Client', false, {id}); else r.json().then(b=>showResponse('Delete Client', r.status>=400, b)); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteSelectedClients(){
+        const sels = Array.from(document.querySelectorAll('.sel-client:checked')).map(n => n.dataset.id);
+        if(!sels.length){ showResponse('No selection', true, {message:'No clients selected'}); return; }
+        if(!confirm('Delete selected clients: '+sels.join(','))) return;
+        Promise.all(sels.map(id=>fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'})))
+            .then(res => Promise.all(res.map(r => r.status===204?Promise.resolve({status:204}):r.json())))
+            .then(results => { showResponse('Delete Selected Clients', false, results); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
 
     // Rendezvous helpers
-    function cancelRendezVous(id){ if(!confirm('Cancel rendez-vous '+id+'?')) return; fetch(`${API_BASE}/rendezvous/${id}/cancel`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status:'Cancelled by UI' }) }).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Cancel RV ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); }).catch(e=>showResponse('Error', true, {message:e.message})); }
-    function deleteRendezVous(id){ if(!confirm('Delete rendez-vous '+id+'?')) return; fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete RV', false, {id}); else r.json().then(b=>showResponse('Delete RV', r.status>=400, b)); refreshData();}); }
-    function deleteSelectedRendezVous(){ const sels=Array.from(document.querySelectorAll('.sel-rv:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No RV selected'}); return;} if(!confirm('Delete selected RV: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected RV', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
+    function cancelRendezVous(id){
+        if(!confirm('Cancel rendez-vous '+id+'?')) return;
+        fetch(`${API_BASE}/rendezvous/${id}/cancel`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status:'Cancelled by UI' }) })
+            .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Cancel RV ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); })
+            .catch(e=>showResponse('Error', true, {message:e.message}));
+    }
+
+    function deleteRendezVous(id){
+        if(!confirm('Delete rendez-vous '+id+'?')) return;
+        fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'})
+            .then(r=>{ if(r.status===204) showResponse('Delete RV', false, {id}); else r.json().then(b=>showResponse('Delete RV', r.status>=400, b)); refreshData(); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteSelectedRendezVous(){
+        const sels = Array.from(document.querySelectorAll('.sel-rv:checked')).map(n=>n.dataset.id);
+        if(!sels.length){ showResponse('No selection', true, {message:'No RV selected'}); return; }
+        if(!confirm('Delete selected RV: '+sels.join(','))) return;
+        Promise.all(sels.map(id=>fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'})))
+            .then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json())))
+            .then(results=>{ showResponse('Delete Selected RV', false, results); refreshData(); })
+            .catch(e=>showResponse('Error', true, { message: e.message }));
+    }
 
     // Notifications helpers
-    function deleteNotification(id){ if(!confirm('Delete notification '+id+'?')) return; fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData();}); }
-    function deleteSelectedNotifications(){ const sels=Array.from(document.querySelectorAll('.sel-notif:checked')).map(n=>n.dataset.id); if(!sels.length){ showResponse('No selection', true, {message:'No notifications selected'}); return;} if(!confirm('Delete selected notifications: '+sels.join(','))) return; Promise.all(sels.map(id=>fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'}))).then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json()))).then(results=>{showResponse('Delete Selected Notifications', false, results); refreshData();}).catch(e=>showResponse('Error',true,{message:e.message})); }
+    function deleteNotification(id){
+        if(!confirm('Delete notification '+id+'?')) return;
+        fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'})
+            .then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData(); })
+            .catch(e=>showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteSelectedNotifications(){
+        const sels = Array.from(document.querySelectorAll('.sel-notif:checked')).map(n=>n.dataset.id);
+        if(!sels.length){ showResponse('No selection', true, {message:'No notifications selected'}); return; }
+        if(!confirm('Delete selected notifications: '+sels.join(','))) return;
+        Promise.all(sels.map(id=>fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'})))
+            .then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json())))
+            .then(results=>{ showResponse('Delete Selected Notifications', false, results); refreshData(); })
+            .catch(e=>showResponse('Error', true, { message: e.message }));
+    }
 
     function deleteAllServices() { if (confirm('Delete all services?')) fetch(`${API_BASE}/services/clear`, { method: 'DELETE' }).then(() => refreshData()); }
     function deleteAllEmployees() { if (confirm('Delete all employees?')) fetch(`${API_BASE}/employees/clear`, { method: 'DELETE' }).then(() => refreshData()); }
@@ -1026,7 +1094,8 @@
                 html += '</table>';
                 body.innerHTML = html;
                 modal.classList.add('show');
-            });
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
     function deleteSelectedFromModal() {
