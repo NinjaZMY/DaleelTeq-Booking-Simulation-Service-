@@ -603,11 +603,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('servicesList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading services: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(s => {
+                list.innerHTML = data.data.map(s => {
                     servicesById[s.id] = s.timeValue;
                     return `<li>
                         <input type="checkbox" class="sel-service" data-id="${s.id}"> ID ${s.id}: ${s.lib} (${s.timeValue} min)
@@ -624,11 +624,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('employeesList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading employees: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(e => `<li>
+                list.innerHTML = data.data.map(e => `<li>
                     <input type="checkbox" class="sel-employee" data-id="${e.id}"> ID ${e.id}: ${e.lib}
                     <button onclick="editEmployee(${e.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteEmployee(${e.id})" style="margin-left:6px;">Delete</button>
@@ -642,11 +642,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('clientsList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading clients: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(c => `<li>
+                list.innerHTML = data.data.map(c => `<li>
                     <input type="checkbox" class="sel-client" data-id="${c.id}"> ID ${c.id}: ${c.lib} (${c.number})
                     <button onclick="editClient(${c.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteClient(${c.id})" style="margin-left:6px;">Delete</button>
@@ -660,11 +660,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('esList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading ES: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(es => `<li>
+                list.innerHTML = data.data.map(es => `<li>
                     <input type="checkbox" class="sel-es" data-id="${es.id}">
                     ID ${es.id}: ${es.date} ${es.startTime || es.start || ''}-${es.endTime || es.end || ''} [${es.status}]
                     <button onclick="editES(${es.id})" style="margin-left:8px;">Edit</button>
@@ -679,11 +679,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('rvList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading rendez-vous: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(rv => `<li>
+                list.innerHTML = data.data.map(rv => `<li>
                     <input type="checkbox" class="sel-rv" data-id="${rv.id}"> ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]
                     <button onclick="cancelRendezVous(${rv.id})" style="margin-left:8px;">Cancel</button>
                     <button onclick="deleteRendezVous(${rv.id})" style="margin-left:6px;">Delete</button>
@@ -697,11 +697,11 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('notificationsList');
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.data)) {
                     list.innerHTML = '<li style="color:red;">Error loading notifications: ' + JSON.stringify(data) + '</li>';
                     return;
                 }
-                list.innerHTML = data.map(n => `<li>
+                list.innerHTML = data.data.map(n => `<li>
                     <input type="checkbox" class="sel-notif" data-id="${n.id}"> ID ${n.id}: ${n.type} - ${n.value}
                     <button onclick="deleteNotification(${n.id})" style="margin-left:8px;">Delete</button>
                 </li>`).join('');
