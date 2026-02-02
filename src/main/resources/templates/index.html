@@ -714,7 +714,7 @@
         const time = document.getElementById('serviceTime').value;
 
         if (!name || !time) {
-            log('Please fill all fields', true);
+            showResponse('Validation Error', true, { message: 'Please fill all required fields: Name and Duration' });
             return;
         }
 
@@ -726,9 +726,114 @@
         .then(async r => {
             const body = await r.json().catch(()=>null);
             showResponse('Create Service ['+r.status+']', r.status>=400, body || { status: r.status });
-            refreshData();
+            if (r.status < 400) {
+                document.getElementById('serviceName').value = '';
+                document.getElementById('serviceTime').value = '';
+                refreshData();
+            }
         })
         .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function createEmployee() {
+        const name = document.getElementById('employeeName').value;
+
+        if (!name) {
+            showResponse('Validation Error', true, { message: 'Please fill the required field: Employee Name' });
+            return;
+        }
+
+        fetch(`${API_BASE}/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lib: name })
+        })
+        .then(async r => {
+            const body = await r.json().catch(()=>null);
+            showResponse('Create Employee ['+r.status+']', r.status>=400, body || { status: r.status });
+            if (r.status < 400) {
+                document.getElementById('employeeName').value = '';
+                refreshData();
+            }
+        })
+        .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function createClient() {
+        const name = document.getElementById('clientName').value;
+        const phone = document.getElementById('clientPhone').value;
+
+        if (!name || !phone) {
+            showResponse('Validation Error', true, { message: 'Please fill all required fields: Name and Phone Number' });
+            return;
+        }
+
+        fetch(`${API_BASE}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lib: name, number: phone })
+        })
+        .then(async r => {
+            const body = await r.json().catch(()=>null);
+            showResponse('Create Client ['+r.status+']', r.status>=400, body || { status: r.status });
+            if (r.status < 400) {
+                document.getElementById('clientName').value = '';
+                document.getElementById('clientPhone').value = '';
+                refreshData();
+            }
+        })
+        .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function createES() {
+        const empId = document.getElementById('esEmployeeId').value;
+        const srvId = document.getElementById('esServiceId').value;
+        const date = document.getElementById('esDate').value;
+        const start = document.getElementById('esStart').value;
+        const x2 = document.getElementById('esX2').checked ? 1 : 0;
+
+        if (!empId || !srvId || !date || !start) {
+            showResponse('Validation Error', true, { message: 'Please fill all required fields: Employee ID, Service ID, Date, and Start Time' });
+            return;
+        }
+
+        // Fetch service to get timeValue
+        fetch(`${API_BASE}/services/${srvId}`)
+            .then(r => r.json())
+            .then(response => {
+                const service = response.data ? response.data : response;
+                const duration = service.timeValue * (x2 ? 2 : 1);
+                const endTime = computeEndTime(start, duration);
+
+                fetch(`${API_BASE}/es`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idE: parseInt(empId),
+                        idS: parseInt(srvId),
+                        date: date,
+                        startTime: start,
+                        endTime: endTime,
+                        timeValue: duration,
+                        x2: x2,
+                        status: 'free'
+                    })
+                })
+                .then(async r => {
+                    const body = await r.json().catch(()=>null);
+                    showResponse('Create Timeslot ['+r.status+']', r.status>=400, body || { status: r.status });
+                    if (r.status < 400) {
+                        document.getElementById('esEmployeeId').value = '';
+                        document.getElementById('esServiceId').value = '';
+                        document.getElementById('esDate').value = '';
+                        document.getElementById('esStart').value = '';
+                        document.getElementById('esX2').checked = false;
+                        refreshData();
+                    }
+                })
+                .catch(e => showResponse('Error', true, { message: e.message }));
+            })
+            .catch(e => showResponse('Error', true, { message: 'Failed to fetch service: ' + e.message }));
     }
 
     // Edit service in-place using a prompt (simple UI)
@@ -763,6 +868,7 @@
                 if (r.status===204) showResponse('Delete Service','', { id });
                 else r.json().then(b => showResponse('Delete Service', r.status>=400, b));
                 refreshData();
+                if (currentRowsEntity === 'services') showRowsModal('services');
             }).catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -773,7 +879,7 @@
         // delete sequentially
         Promise.all(sels.map(id => fetch(`${API_BASE}/services/${id}`, { method: 'DELETE' })))
             .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({id:null,status:204}) : r.json())))
-            .then(results => { showResponse('Delete Selected Services', false, results); refreshData(); })
+            .then(results => { showResponse('Delete Selected Services', false, results); refreshData(); if (currentRowsEntity === 'services') showRowsModal('services'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -814,7 +920,7 @@
     function deleteES(id) {
         if (!confirm('Delete ES ID '+id+'?')) return;
         fetch(`${API_BASE}/es/${id}`, { method: 'DELETE' })
-            .then(r=>{ if (r.status===204) showResponse('Delete ES', false, { id }); else r.json().then(b=>showResponse('Delete ES', r.status>=400, b)); refreshData(); })
+            .then(r=>{ if (r.status===204) showResponse('Delete ES', false, { id }); else r.json().then(b=>showResponse('Delete ES', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'es') showRowsModal('es'); })
             .catch(e=>showResponse('Error', true, { message: e.message }));
     }
 
@@ -824,7 +930,7 @@
         if (!confirm('Delete selected ES: '+sels.join(','))) return;
         Promise.all(sels.map(id => fetch(`${API_BASE}/es/${id}`, { method: 'DELETE' })))
             .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({id:null,status:204}) : r.json())))
-            .then(results => { showResponse('Delete Selected ES', false, results); refreshData(); })
+            .then(results => { showResponse('Delete Selected ES', false, results); refreshData(); if (currentRowsEntity === 'es') showRowsModal('es'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -881,14 +987,14 @@
                 .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Employee ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); if (currentRowsEntity === 'employees') showRowsModal('employees'); });
         });
     }
-    function deleteEmployee(id){ if(!confirm('Delete employee '+id+'?')) return; fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Employee', false, {id}); else r.json().then(b=>showResponse('Delete Employee', r.status>=400, b)); refreshData();}); }
+    function deleteEmployee(id){ if(!confirm('Delete employee '+id+'?')) return; fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Employee', false, {id}); else r.json().then(b=>showResponse('Delete Employee', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'employees') showRowsModal('employees'); }); }
     function deleteSelectedEmployees(){
         const sels = Array.from(document.querySelectorAll('.sel-employee:checked')).map(n => n.dataset.id);
         if(!sels.length) { showResponse('No selection', true, {message:'No employees selected'}); return; }
         if(!confirm('Delete selected employees: '+sels.join(','))) return;
         Promise.all(sels.map(id => fetch(`${API_BASE}/employees/${id}`, { method:'DELETE' })))
             .then(res => Promise.all(res.map(r => r.status===204 ? Promise.resolve({status:204}) : r.json())))
-            .then(results => { showResponse('Delete Selected Employees', false, results); refreshData(); })
+            .then(results => { showResponse('Delete Selected Employees', false, results); refreshData(); if (currentRowsEntity === 'employees') showRowsModal('employees'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -910,7 +1016,7 @@
     function deleteClient(id){
         if(!confirm('Delete client '+id+'?')) return;
         fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'})
-            .then(r=>{ if(r.status===204) showResponse('Delete Client', false, {id}); else r.json().then(b=>showResponse('Delete Client', r.status>=400, b)); refreshData(); })
+            .then(r=>{ if(r.status===204) showResponse('Delete Client', false, {id}); else r.json().then(b=>showResponse('Delete Client', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'clients') showRowsModal('clients'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -920,7 +1026,7 @@
         if(!confirm('Delete selected clients: '+sels.join(','))) return;
         Promise.all(sels.map(id=>fetch(`${API_BASE}/clients/${id}`,{method:'DELETE'})))
             .then(res => Promise.all(res.map(r => r.status===204?Promise.resolve({status:204}):r.json())))
-            .then(results => { showResponse('Delete Selected Clients', false, results); refreshData(); })
+            .then(results => { showResponse('Delete Selected Clients', false, results); refreshData(); if (currentRowsEntity === 'clients') showRowsModal('clients'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -935,7 +1041,7 @@
     function deleteRendezVous(id){
         if(!confirm('Delete rendez-vous '+id+'?')) return;
         fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'})
-            .then(r=>{ if(r.status===204) showResponse('Delete RV', false, {id}); else r.json().then(b=>showResponse('Delete RV', r.status>=400, b)); refreshData(); })
+            .then(r=>{ if(r.status===204) showResponse('Delete RV', false, {id}); else r.json().then(b=>showResponse('Delete RV', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'rendezvous') showRowsModal('rendezvous'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
 
@@ -945,7 +1051,7 @@
         if(!confirm('Delete selected RV: '+sels.join(','))) return;
         Promise.all(sels.map(id=>fetch(`${API_BASE}/rendezvous/${id}`,{method:'DELETE'})))
             .then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json())))
-            .then(results=>{ showResponse('Delete Selected RV', false, results); refreshData(); })
+            .then(results=>{ showResponse('Delete Selected RV', false, results); refreshData(); if (currentRowsEntity === 'rendezvous') showRowsModal('rendezvous'); })
             .catch(e=>showResponse('Error', true, { message: e.message }));
     }
 
@@ -953,7 +1059,9 @@
     function deleteNotification(id){
         if(!confirm('Delete notification '+id+'?')) return;
         fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'})
-            .then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData(); })
+            .then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'notifications') showRowsModal('notifications'); })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
             .catch(e=>showResponse('Error', true, { message: e.message }));
     }
 
@@ -963,16 +1071,81 @@
         if(!confirm('Delete selected notifications: '+sels.join(','))) return;
         Promise.all(sels.map(id=>fetch(`${API_BASE}/notifications/${id}`,{method:'DELETE'})))
             .then(res=>Promise.all(res.map(r=>r.status===204?Promise.resolve({status:204}):r.json())))
-            .then(results=>{ showResponse('Delete Selected Notifications', false, results); refreshData(); })
+            .then(results=>{ showResponse('Delete Selected Notifications', false, results); refreshData(); if (currentRowsEntity === 'notifications') showRowsModal('notifications'); })
             .catch(e=>showResponse('Error', true, { message: e.message }));
     }
 
-    function deleteAllServices() { if (confirm('Delete all services?')) fetch(`${API_BASE}/services/clear`, { method: 'DELETE' }).then(() => refreshData()); }
-    function deleteAllEmployees() { if (confirm('Delete all employees?')) fetch(`${API_BASE}/employees/clear`, { method: 'DELETE' }).then(() => refreshData()); }
-    function deleteAllClients() { if (confirm('Delete all clients?')) fetch(`${API_BASE}/clients/clear`, { method: 'DELETE' }).then(() => refreshData()); }
-    function deleteAllES() { if (confirm('Delete all timeslots?')) fetch(`${API_BASE}/es/clear`, { method: 'DELETE' }).then(() => refreshData()); }
-    function deleteAllRendezVous() { if (confirm('Delete all rendez-vous?')) fetch(`${API_BASE}/rendezvous/clear`, { method: 'DELETE' }).then(() => refreshData()); }
-    function deleteAllNotifications() { if (confirm('Delete all notifications?')) fetch(`${API_BASE}/notifications/clear`, { method: 'DELETE' }).then(() => refreshData()); }
+    function deleteAllServices() {
+        if (!confirm('Delete all services?')) return;
+        fetch(`${API_BASE}/services/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Services', false, body || { message: 'All services deleted' });
+                refreshData();
+                if (currentRowsEntity === 'services') showRowsModal('services');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteAllEmployees() {
+        if (!confirm('Delete all employees?')) return;
+        fetch(`${API_BASE}/employees/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Employees', false, body || { message: 'All employees deleted' });
+                refreshData();
+                if (currentRowsEntity === 'employees') showRowsModal('employees');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteAllClients() {
+        if (!confirm('Delete all clients?')) return;
+        fetch(`${API_BASE}/clients/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Clients', false, body || { message: 'All clients deleted' });
+                refreshData();
+                if (currentRowsEntity === 'clients') showRowsModal('clients');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteAllES() {
+        if (!confirm('Delete all timeslots?')) return;
+        fetch(`${API_BASE}/es/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Timeslots', false, body || { message: 'All timeslots deleted' });
+                refreshData();
+                if (currentRowsEntity === 'es') showRowsModal('es');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteAllRendezVous() {
+        if (!confirm('Delete all rendez-vous?')) return;
+        fetch(`${API_BASE}/rendezvous/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Rendez-vous', false, body || { message: 'All rendez-vous deleted' });
+                refreshData();
+                if (currentRowsEntity === 'rendezvous') showRowsModal('rendezvous');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
+
+    function deleteAllNotifications() {
+        if (!confirm('Delete all notifications?')) return;
+        fetch(`${API_BASE}/notifications/clear`, { method: 'DELETE' })
+            .then(async r => {
+                const body = await r.json().catch(()=>null);
+                showResponse('Delete All Notifications', false, body || { message: 'All notifications deleted' });
+                refreshData();
+                if (currentRowsEntity === 'notifications') showRowsModal('notifications');
+            })
+            .catch(e => showResponse('Error', true, { message: e.message }));
+    }
 
     function openClearDBModal() {
         document.getElementById('clearDBModal').classList.add('show');
