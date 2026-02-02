@@ -603,6 +603,10 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('servicesList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading services: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(s => {
                     servicesById[s.id] = s.timeValue;
                     return `<li>
@@ -612,7 +616,7 @@
                     </li>`
                 }).join('');
             })
-            .catch(e => console.error('Error loading services:', e));
+            .catch(e => { const list = document.getElementById('servicesList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function loadEmployees() {
@@ -620,13 +624,17 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('employeesList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading employees: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(e => `<li>
                     <input type="checkbox" class="sel-employee" data-id="${e.id}"> ID ${e.id}: ${e.lib}
                     <button onclick="editEmployee(${e.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteEmployee(${e.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
             })
-            .catch(e => console.error('Error loading employees:', e));
+            .catch(e => { const list = document.getElementById('employeesList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function loadClients() {
@@ -634,13 +642,17 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('clientsList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading clients: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(c => `<li>
                     <input type="checkbox" class="sel-client" data-id="${c.id}"> ID ${c.id}: ${c.lib} (${c.number})
                     <button onclick="editClient(${c.id})" style="margin-left:8px;">Edit</button>
                     <button onclick="deleteClient(${c.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
             })
-            .catch(e => console.error('Error loading clients:', e));
+            .catch(e => { const list = document.getElementById('clientsList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function loadES() {
@@ -648,6 +660,10 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('esList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading ES: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(es => `<li>
                     <input type="checkbox" class="sel-es" data-id="${es.id}">
                     ID ${es.id}: ${es.date} ${es.startTime || es.start || ''}-${es.endTime || es.end || ''} [${es.status}]
@@ -655,7 +671,7 @@
                     <button onclick="deleteES(${es.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
             })
-            .catch(e => console.error('Error loading ES:', e));
+            .catch(e => { const list = document.getElementById('esList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function loadRendezVous() {
@@ -663,13 +679,17 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('rvList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading rendez-vous: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(rv => `<li>
                     <input type="checkbox" class="sel-rv" data-id="${rv.id}"> ID ${rv.id}: ES ${rv.idES} + Client ${rv.idC} [${rv.status}]
                     <button onclick="cancelRendezVous(${rv.id})" style="margin-left:8px;">Cancel</button>
                     <button onclick="deleteRendezVous(${rv.id})" style="margin-left:6px;">Delete</button>
                 </li>`).join('');
             })
-            .catch(e => console.error('Error loading rendez-vous:', e));
+            .catch(e => { const list = document.getElementById('rvList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function loadNotifications() {
@@ -677,12 +697,16 @@
             .then(r => r.json())
             .then(data => {
                 const list = document.getElementById('notificationsList');
+                if (!Array.isArray(data)) {
+                    list.innerHTML = '<li style="color:red;">Error loading notifications: ' + JSON.stringify(data) + '</li>';
+                    return;
+                }
                 list.innerHTML = data.map(n => `<li>
                     <input type="checkbox" class="sel-notif" data-id="${n.id}"> ID ${n.id}: ${n.type} - ${n.value}
                     <button onclick="deleteNotification(${n.id})" style="margin-left:8px;">Delete</button>
                 </li>`).join('');
             })
-            .catch(e => console.error('Error loading notifications:', e));
+            .catch(e => { const list = document.getElementById('notificationsList'); list.innerHTML = '<li style="color:red;">Error: ' + e.message + '</li>'; });
     }
 
     function createService() {
@@ -1012,15 +1036,30 @@
 
     // Raw API tester
     function sendRawRequest() {
-        const ep = document.getElementById('rawEndpoint').value;
+        const ep = document.getElementById('rawEndpoint').value.trim();
         const method = document.getElementById('rawMethod').value;
         const body = document.getElementById('rawBody').value;
+
+        // Build the full URL
+        let full;
+        if (ep.startsWith('http://') || ep.startsWith('https://')) {
+            full = ep; // Already a full URL
+        } else if (ep.startsWith('/')) {
+            // Starts with /, check if it already includes /api
+            if (ep.startsWith('/api/')) {
+                full = ep; // Already has /api/ prefix
+            } else {
+                full = API_BASE + ep; // Prepend API_BASE
+            }
+        } else {
+            // No prefix, add /api/
+            full = API_BASE + '/' + ep;
+        }
+
         let opts = { method };
         if (method !== 'GET' && method !== 'DELETE') {
             try { opts.headers = {'Content-Type':'application/json'}; opts.body = body; } catch(e){}
         }
-        // Use endpoint as provided - don't modify it
-        const full = ep.startsWith('http') ? ep : (ep.startsWith('/') ? (API_BASE + ep) : ('/' + ep));
         fetch(full, opts)
             .then(async r => { const b = await r.text(); let parsed; try { parsed = JSON.parse(b); } catch(e){ parsed = b; } showResponse(full + ' ['+r.status+']', r.status>=400, parsed); })
             .catch(e => showResponse('Network Error', true, { message: e.message }));
