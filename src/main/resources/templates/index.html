@@ -737,7 +737,8 @@
         // fetch service details
         fetch(`${API_BASE}/services/${id}`)
             .then(r => r.json())
-            .then(s => {
+            .then(response => {
+                const s = response.data ? response.data : response;
                 const newName = prompt('Service name:', s.lib);
                 if (newName === null) return; // cancelled
                 const newTime = prompt('Time value (minutes):', s.timeValue);
@@ -750,6 +751,7 @@
                     const body = await r.json().catch(()=>null);
                     showResponse('Update Service ['+r.status+']', r.status>=400, body || { status: r.status });
                     refreshData();
+                    if (currentRowsEntity === 'services') showRowsModal('services');
                 }).catch(e => showResponse('Error', true, { message: e.message }));
             }).catch(()=> showResponse('Error','true',{message:'Service fetch failed'}));
     }
@@ -780,7 +782,8 @@
         // fetch ES details
         fetch(`${API_BASE}/es/${id}`)
             .then(r => r.json())
-            .then(es => {
+            .then(response => {
+                const es = response.data ? response.data : response;
                 const newDate = prompt('Date (YYYY-MM-DD):', es.date);
                 if (newDate === null) return;
                 const newStart = prompt('Start time (HH:MM):', es.startTime || es.start || es.startTimeString || es.start);
@@ -796,13 +799,14 @@
                 };
                 // compute timeValue and endTime using service
                 const srvId = es.idS;
-                fetch(`${API_BASE}/services/${srvId}`).then(r=>r.json()).then(s=>{
+                fetch(`${API_BASE}/services/${srvId}`).then(r=>r.json()).then(srvResponse=>{
+                    const s = srvResponse.data ? srvResponse.data : srvResponse;
                     const duration = s.timeValue * (es.x2?2:1);
                     payload.timeValue = duration;
                     payload.endTime = computeEndTime(newStart, duration);
                     fetch(`${API_BASE}/es/${id}`, {
                         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
-                    }).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update ES ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); });
+                    }).then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update ES ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); if (currentRowsEntity === 'es') showRowsModal('es'); });
                 }).catch(()=> showResponse('Error', true, { message: 'Service fetch failed' }));
             });
     }
@@ -870,10 +874,11 @@
 
     // Employee edit/delete helpers
     function editEmployee(id) {
-        fetch(`${API_BASE}/employees/${id}`).then(r=>r.json()).then(e=>{
+        fetch(`${API_BASE}/employees/${id}`).then(r=>r.json()).then(response=>{
+            const e = response.data ? response.data : response;
             const newName = prompt('Employee name:', e.lib); if (newName===null) return;
             fetch(`${API_BASE}/employees/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ lib: newName }) })
-                .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Employee ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); });
+                .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Employee ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); if (currentRowsEntity === 'employees') showRowsModal('employees'); });
         });
     }
     function deleteEmployee(id){ if(!confirm('Delete employee '+id+'?')) return; fetch(`${API_BASE}/employees/${id}`,{method:'DELETE'}).then(r=>{ if(r.status===204) showResponse('Delete Employee', false, {id}); else r.json().then(b=>showResponse('Delete Employee', r.status>=400, b)); refreshData();}); }
@@ -891,11 +896,12 @@
     function editClient(id){
         fetch(`${API_BASE}/clients/${id}`)
             .then(r=>r.json())
-            .then(c => {
+            .then(response => {
+                const c = response.data ? response.data : response;
                 const newName = prompt('Client name:', c.lib); if (newName === null) return;
                 const newPhone = prompt('Phone:', c.number); if (newPhone === null) return;
                 fetch(`${API_BASE}/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'}, body:JSON.stringify({ lib:newName, number:newPhone })})
-                    .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Client ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); })
+                    .then(async r=>{ const b=await r.json().catch(()=>null); showResponse('Update Client ['+r.status+']', r.status>=400, b||{status:r.status}); refreshData(); if (currentRowsEntity === 'clients') showRowsModal('clients'); })
                     .catch(e => showResponse('Error', true, { message: e.message }));
             })
             .catch(e => showResponse('Error', true, { message: e.message }));
