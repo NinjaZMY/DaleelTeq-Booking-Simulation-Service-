@@ -35,7 +35,20 @@ logs/
 Thumbs.db
 .DS_Store
 
-# Node (if using any frontend tools)
+# Node (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/package-lock.json
+frontend/yarn.lock
+
+# Angular specific
+frontend/dist/
+.angular/cache/
+
+# Node general
 node_modules/
 package-lock.json
 yarn.lock
+
+

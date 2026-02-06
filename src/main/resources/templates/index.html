@@ -1062,8 +1062,6 @@
             .then(r=>{ if(r.status===204) showResponse('Delete Notification', false, {id}); else r.json().then(b=>showResponse('Delete Notification', r.status>=400, b)); refreshData(); if (currentRowsEntity === 'notifications') showRowsModal('notifications'); })
             .catch(e => showResponse('Error', true, { message: e.message }));
     }
-            .catch(e=>showResponse('Error', true, { message: e.message }));
-    }
 
     function deleteSelectedNotifications(){
         const sels = Array.from(document.querySelectorAll('.sel-notif:checked')).map(n=>n.dataset.id);
