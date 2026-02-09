@@ -9,7 +9,7 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 - [Prerequisites](#-prerequisites)
 - [Project Structure](#-project-structure)
 - [Installation & Setup](#-installation--setup)
-- [Database Configuration](#-database-configuration)
+- [Maven Build Profiles](#-maven-build-profiles)
 - [Running the Application](#-running-the-application)
 - [Frontend Development (Angular)](#-frontend-development-angular)
 - [API Endpoints](#-api-endpoints)
@@ -228,6 +228,198 @@ psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
 ```
 
 Expected: **4** services
+
+## 🔨 Maven Build Profiles
+
+This project uses **Maven profiles** to optimize build times during development and production deployments.
+
+### Overview
+
+| Profile | Command | Time | Angular Build | Use Case |
+|---------|---------|------|---|---|
+| **dev** (DEFAULT) | `mvn clean package -DskipTests` | ~28 seconds | ❌ Skipped | Local development & backend testing |
+| **prod** | `mvn clean package -DskipTests -P prod` | ~5-10 minutes | ✅ Included | Production deployments |
+
+### Development Build (Default)
+
+**Fastest build** - Skip Angular compilation, perfect for backend development and testing.
+
+```bash
+# Standard command (dev profile active by default)
+mvn clean package -DskipTests
+```
+
+**Or explicitly use dev profile:**
+```bash
+mvn clean package -DskipTests -P dev
+```
+
+**What happens:**
+- ✅ Java backend compiles
+- ❌ Angular build **SKIPPED**
+- ❌ npm install **SKIPPED**
+- ❌ Angular files **NOT** copied to static/
+- 📦 JAR created with existing dist files (if available)
+
+**Duration:** ~28 seconds
+
+**Output:**
+```
+target/booking-simulation-service-1.0.0.jar
+```
+
+**When to use:**
+- Local development
+- Testing backend APIs
+- Quick iteration on Java code
+- Backend database/service changes
+- Running unit/integration tests
+
+**How to run:**
+```bash
+# Build
+mvn clean package -DskipTests
+
+# Run
+java -jar target/booking-simulation-service-1.0.0.jar
+
+# Access at: http://localhost:8080
+```
+
+### Production Build
+
+**Full build** - Include Angular compilation for production deployment.
+
+```bash
+mvn clean package -DskipTests -P prod
+```
+
+**What happens:**
+- ✅ Java backend compiles
+- ✅ Node.js/npm installed (if needed)
+- ✅ npm install runs
+- ✅ Angular builds (`npm run build:prod`)
+- ✅ Angular dist files copied to `src/main/resources/static/`
+- 📦 JAR created with bundled Angular files
+
+**Duration:** ~5-10 minutes (first build takes longer for dependencies)
+
+**Output:**
+```
+target/booking-simulation-service-1.0.0.jar (with Angular bundled)
+```
+
+**When to use:**
+- Production deployments
+- Final releases
+- When frontend and backend must be together
+- CI/CD pipelines
+- Docker image builds
+
+**How to run:**
+```bash
+# Build
+mvn clean package -DskipTests -P prod
+
+# Run
+java -jar target/booking-simulation-service-1.0.0.jar
+
+# Access at: http://localhost:8080 (includes Angular UI)
+```
+
+### Development vs Production Comparison
+
+#### Development Workflow
+```bash
+# Terminal 1: Build backend
+mvn clean package -DskipTests
+java -jar target/booking-simulation-service-1.0.0.jar
+
+# Terminal 2: Develop Angular separately
+cd frontend
+npm run start  # HMR on port 4200
+# Access Angular: http://localhost:4200 (proxies to backend)
+```
+
+**Benefits:**
+- ⚡ Super fast builds (~28 sec)
+- 🔄 Angular HMR for instant code refresh
+- 🐛 Better error visibility in both console windows
+- 🔧 Independent backend and frontend development
+- 📊 Clear separation of concerns
+
+#### Production Workflow
+```bash
+# Single command builds everything
+mvn clean package -DskipTests -P prod
+java -jar target/booking-simulation-service-1.0.0.jar
+
+# Access at: http://localhost:8080
+# Angular, backend, and UI all included
+```
+
+**Benefits:**
+- 📦 Single JAR file deployment
+- 🚀 No separate build steps
+- 🔒 Optimized and minified
+- 🌐 No CORS issues
+- 🎯 Exactly what users get
+
+### Switching Between Profiles
+
+**Check active profile:**
+```bash
+mvn help:active-profiles
+```
+
+**Output:**
+```
+[INFO] Active Profiles for Project 'com.daleelteq:booking-simulation-service':
+[INFO]   The following profiles are active:
+[INFO]    - dev (source: pom.xml)
+```
+
+**Override profile:**
+```bash
+# Use production profile
+mvn clean package -DskipTests -P prod
+
+# Use development profile (explicit)
+mvn clean package -DskipTests -P dev
+
+# Multiple profiles (if needed)
+mvn clean package -DskipTests -P dev,other-profile
+```
+
+### Frontend in Development
+
+While using **dev profile**, manage Angular separately:
+
+```bash
+cd frontend
+
+# Development server with HMR (auto-reload)
+npm run start
+# Access: http://localhost:4200
+
+# Build when ready for production profile
+npm run build:prod
+
+# Production build for Maven
+npm run build:prod
+```
+
+### Angular Build Output
+
+- **Development build** (dev profile):
+  - Uses existing `frontend/dist/` folder
+  - No new build unless you run `npm run build:prod`
+
+- **Production build** (prod profile):
+  - Runs `npm run build:prod` automatically
+  - Generates optimized, minified bundle
+  - Copies to `src/main/resources/static/`
+  - Included in final JAR
 
 ## ▶️ Running the Application
 
