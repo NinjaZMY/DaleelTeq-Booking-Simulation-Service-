@@ -28,6 +28,8 @@
         <testcontainers.version>1.20.1</testcontainers.version>
         <node.version>v24.11.1</node.version>
         <npm.version>10.9.0</npm.version>
+        <!-- Set to true to skip Angular build during development -->
+        <skip.frontend.build>false</skip.frontend.build>
     </properties>
 
     <dependencies>
@@ -166,6 +168,7 @@
                     <workingDirectory>frontend</workingDirectory>
                     <nodeVersion>${node.version}</nodeVersion>
                     <npmVersion>${npm.version}</npmVersion>
+                    <skip>${skip.frontend.build}</skip>
                 </configuration>
                 <executions>
                     <!-- Install Node and npm -->
@@ -223,12 +226,79 @@
                                     <filtering>false</filtering>
                                 </resource>
                             </resources>
-                            <skip>false</skip>
+                            <skip>${skip.frontend.build}</skip>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <!-- Maven Profiles for Development and Production -->
+    <profiles>
+        <!-- Development Profile: Skip Angular Build -->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <skip.frontend.build>true</skip.frontend.build>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="🔧 DEV BUILD: Angular frontend build SKIPPED"/>
+                                        <echo message="   Use existing dist files or run 'npm run build:prod' manually in frontend/"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Production Profile: Build Angular -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <skip.frontend.build>false</skip.frontend.build>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="🚀 PRODUCTION BUILD: Angular frontend will be built"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
