@@ -4,15 +4,18 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-- [Database Setup](#database-setup)
-- [Running the Application](#running-the-application)
-- [API Endpoints](#api-endpoints)
-- [Environment Configuration](#environment-configuration)
-- [Testing](#testing)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Project Structure](#-project-structure)
+- [Installation & Setup](#-installation--setup)
+- [Database Configuration](#-database-configuration)
+- [Running the Application](#-running-the-application)
+- [Frontend Development (Angular)](#-frontend-development-angular)
+- [API Endpoints](#-api-endpoints)
+- [Environment Configuration](#-environment-configuration)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
 
 ## ✨ Features
 
@@ -32,6 +35,7 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 
 ## 🛠️ Tech Stack
 
+### Backend
 - **Java 25**
 - **Spring Boot 4.0**
 - **Spring Data JPA**
@@ -39,17 +43,32 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 - **Spring DevTools (Hot Reload)**
 - **PostgreSQL 18**
 - **Lombok**
-- **Thymeleaf**
+- **Thymeleaf** (legacy UI)
 - **Maven**
 - **Testcontainers** (for integration tests)
 - **Mockito** (for unit tests)
 
+### Frontend (Angular)
+- **Angular 21.0.1**
+- **TypeScript 5.6.3**
+- **Node.js 24.11.1** (auto-installed by Maven)
+- **npm 10.9.0** (auto-installed by Maven)
+- **SCSS** for styling
+- **HMR (Hot Module Reload)** enabled for development
+
 ## 📦 Prerequisites
 
+### Backend Requirements
 - **Java 25** installed and configured
 - **PostgreSQL 18** installed and running
-- **Maven** (local installation recommended; Maven Wrapper included)
+- **Maven** (local installation recommended; Maven Wrapper also available)
 - **IntelliJ IDEA** (or any IDE with Maven support)
+
+### Frontend Requirements (for Angular development)
+- **Node.js 24.11.1** and **npm 10.9.0** (automatically installed by Maven during `npm-install` phase, or install manually if developing without Maven)
+- **npm** for running `npm start` in `frontend/` directory
+
+**Note**: During Maven build, Node.js and npm are automatically downloaded to `frontend/node/` directory.
 
 ### Install PostgreSQL 18
 
@@ -62,6 +81,69 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 ```bash
 brew install postgresql@18
 brew services start postgresql@18
+```
+
+#### Linux (Ubuntu)
+```bash
+sudo apt update
+sudo apt install postgresql-18
+sudo systemctl start postgresql
+```
+
+## 📁 Project Structure
+
+```
+DaleelTeq-Booking-Simulation-Service/
+├── frontend/                              # Angular 21 application
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── app.component.ts
+│   │   │   ├── app.component.html
+│   │   │   ├── app.component.scss
+│   │   │   ├── app.module.ts
+│   │   │   ├── config/
+│   │   │   │   └── app.config.ts
+│   │   │   └── services/
+│   │   │       └── api.service.ts
+│   │   ├── styles.scss
+│   │   ├── index.html
+│   │   └── main.ts
+│   ├── node/                              # Node.js/npm (auto-downloaded by Maven)
+│   ├── angular.json
+│   ├── tsconfig.json
+│   ├── package.json
+│   ├── proxy.conf.json                    # Backend API proxy config
+│   └── .gitignore
+├── src/
+│   ├── main/
+│   │   ├── java/com/daleelteq/booking/
+│   │   │   ├── BookingApplication.java
+│   │   │   ├── config/
+│   │   │   │   ├── WebConfig.java        (Case-insensitive routing)
+│   │   │   │   ├── TimeWindowConfig.java
+│   │   │   │   └── DotenvEnvironmentPostProcessor.java
+│   │   │   ├── controller/                # REST & Web controllers
+│   │   │   ├── domain/                    # JPA entities
+│   │   │   ├── dto/                       # Data transfer objects
+│   │   │   ├── repository/                # Data access layer
+│   │   │   ├── service/                   # Business logic
+│   │   │   └── exception/                 # Exception handlers
+│   │   ├── resources/
+│   │   │   ├── application.properties
+│   │   │   ├── application.yml
+│   │   │   ├── db/
+│   │   │   │   └── schema-postgres18.sql
+│   │   │   ├── static/                    # Angular build output (production)
+│   │   │   └── templates/
+│   │   │       └── index.html             # Legacy Thymeleaf UI
+│   │   └── ...
+│   └── test/
+│       └── java/com/daleelteq/booking/    # Unit & integration tests
+├── .env.example                           # Environment template (DO NOT commit .env)
+├── .gitignore
+├── setup-db-permissions.sql
+├── pom.xml                                # Maven config (includes Angular build)
+└── README.md
 ```
 
 #### Linux (Ubuntu)
@@ -176,11 +258,158 @@ java -jar target/booking-simulation-service-1.0.0.jar
 
 Right-click `BookingApplication.java` → "Run 'BookingApplication.main()'"
 
+## 🅰️ Frontend Development (Angular)
+
+### Option 1: Integrated Build (Maven handles everything)
+
+This is the simplest for initial setup. Maven automatically builds Angular as part of the Spring Boot build.
+
+```bash
+# Build and run (Angular builds to static/)
+mvn spring-boot:run
+```
+
+Access the application at:
+- **Angular UI**: http://localhost:8080 (production build served by Spring Boot)
+- **Legacy Thymeleaf UI**: http://localhost:8080/ui
+- **API**: http://localhost:8080/api
+
+**Note**: Changes to Angular code require rebuilding. Use Option 2 for faster development.
+
+### Option 2: Separate Development Servers (Recommended for Development)
+
+This setup uses HMR (Hot Module Reload) for instant code changes without rebuild/restart.
+
+**Terminal 1: Start Spring Boot Backend**
+```bash
+mvn spring-boot:run
+```
+- Backend runs on **http://localhost:8080**
+- API endpoints at **http://localhost:8080/api/**
+
+**Terminal 2: Start Angular Dev Server with HMR**
+```bash
+cd frontend
+npm install  # First time only
+npm start
+```
+- Angular runs on **http://localhost:4200**
+- Proxies API calls to `http://localhost:8080/api` (via `proxy.conf.json`)
+- **HMR enabled**: Changes auto-reload instantly
+- Console shows all TypeScript/build errors in real-time
+
+### Fallback: Legacy Thymeleaf UI
+
+If Angular has issues, the legacy Thymeleaf-based dashboard is always available:
+- **URL**: http://localhost:8080/ui
+- Complete CRUD interface for testing
+- No JavaScript build required
+
+### Angular Development Features
+
+**HMR (Hot Module Reload)**:
+- File changes auto-detect and recompile
+- Page refreshes automatically in browser
+- No manual restart needed
+- Preserves component state during reload
+
+**Error Console**:
+```bash
+# Terminal running `npm start` displays:
+- TypeScript compilation errors
+- Build warnings
+- Runtime exceptions
+- Network request logs
+```
+
+### Frontend Build Commands
+
+```bash
+cd frontend
+
+# Development server with HMR (auto-reload)
+npm start
+
+# Production build (minified, optimized)
+npm run build:prod
+
+# Build specific to development
+npm run build:dev
+
+# Run unit tests
+npm test
+
+# Run linter
+npm lint
+```
+
+### Frontend Structure
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── app.component.ts       # Root component
+│   │   ├── app.component.html     # Root template
+│   │   ├── app.component.scss     # Component styles
+│   │   ├── app.module.ts          # Module declarations
+│   │   ├── config/
+│   │   │   └── app.config.ts      # Configuration (API URLs, etc.)
+│   │   └── services/
+│   │       └── api.service.ts     # HTTP client for backend API
+│   ├── styles.scss                # Global styles
+│   ├── main.ts                    # Bootstrap file
+│   └── index.html                 # Entry HTML
+├── angular.json                   # Angular CLI config
+├── tsconfig.json                  # TypeScript config
+├── proxy.conf.json                # Dev server proxy to backend
+├── package.json                   # npm dependencies
+└── .gitignore
+```
+
+### API Proxy Configuration
+
+**Development** (`npm start`):
+- Angular dev server proxies `/api/*` requests to `http://localhost:8080`
+- Configured in `frontend/proxy.conf.json`
+- Allows development without CORS issues
+
+**Production** (Maven build):
+- Angular build output (`dist/`) copied to `src/main/resources/static/`
+- Served by Spring Boot on same origin
+- API calls go directly to `/api/*`
+
+### Troubleshooting Angular Development
+
+**Port 4200 already in use**:
+```bash
+# Use different port
+ng serve --port 4201
+```
+
+**npm ci vs npm install**:
+- Maven uses `npm install` to create `package-lock.json` on first run
+- Subsequent builds can use `npm ci` for reproducible installs
+
+**HMR not working**:
+- Verify `npm start` is running in `frontend/` directory
+- Check browser console for errors
+- Kill `npm start` process and restart
+
+**Angular build fails**:
+```bash
+# Clear cache and rebuild
+rm -rf node_modules dist
+npm install
+npm run build:prod
+```
+
 ## 🌐 Accessing the Application
 
-- **Web UI**: http://localhost:8080
+- **Angular UI** (development): http://localhost:4200
+- **Spring Boot** (backend + legacy UI): http://localhost:8080
+- **Legacy Thymeleaf Dashboard**: http://localhost:8080/ui
 - **API Base**: http://localhost:8080/api
-- **H2 Console** (if enabled): http://localhost:8080/h2-console
 
 ## 📡 API Endpoints
 
@@ -494,24 +723,86 @@ src/
 
 ## 🆘 Troubleshooting
 
-### "Connection refused" to PostgreSQL
+### Backend (Spring Boot)
+
+**"Connection refused" to PostgreSQL**
 - Ensure PostgreSQL is running: `psql -U postgres`
 - Check port 5432 is accessible
 - Verify credentials in `.env`
 
-### Maven build fails
+**Maven build fails**
 - Ensure Java 25: `java -version`
 - Clear cache: `mvn clean`
 - Check Maven path: `mvn -v`
+- For `npm ci` errors: Maven now uses `npm install` by default
 
-### IntelliJ doesn't recognize Maven
+**IntelliJ doesn't recognize Maven**
 - Right-click `pom.xml` → "Add as Maven Project"
 - File → Project Structure → Check SDK is Java 25
 
-### Hot reload not working
+**Spring Boot hot reload not working**
 - Check DevTools dependencies in `pom.xml`
-- Ensure `spring.devtools.restart.enabled=true`
+- Ensure `spring.devtools.restart.enabled=true` in application.properties
 - Build project: Ctrl+Shift+F9 (IntelliJ)
+- File changes should auto-reload within 1-2 seconds
+
+**Port 8080 already in use**
+```bash
+# Find and kill process using port 8080
+netstat -ano | findstr :8080
+taskkill /PID <PID> /F
+```
+
+### Frontend (Angular)
+
+**Port 4200 already in use**
+```bash
+# Use different port
+cd frontend
+npm start -- --port 4201
+```
+
+**Angular build fails during Maven build**
+- Clear frontend cache: `rm -rf frontend/node_modules frontend/dist`
+- Run Maven again: `mvn clean package`
+- Check Node.js version: `frontend/node/node.exe --version` should be v24.11.1
+
+**HMR (Hot Module Reload) not working**
+- Verify `npm start` is running in `frontend/` directory
+- Check browser console (F12) for errors
+- Restart `npm start` process
+- Check `frontend/proxy.conf.json` for correct backend URL
+
+**npm ci fails**
+- Ensure `package-lock.json` exists in `frontend/`
+- If missing, run: `npm install` to generate it
+- Maven uses `npm install` automatically
+
+**Angular dev server not proxying API calls**
+- Verify backend is running on http://localhost:8080
+- Check `frontend/proxy.conf.json` has correct `target`
+- Restart `npm start`
+- Check network tab (F12) to see actual request URLs
+
+### General
+
+**`.env` file issues**
+- Ensure `.env` exists in project root (not committed to Git)
+- Check `.gitignore` includes `.env`
+- Verify `DotenvEnvironmentPostProcessor` is loaded (check Spring logs)
+
+**Database schema errors**
+- Drop and recreate database:
+  ```bash
+  psql -U postgres -c "DROP DATABASE booking_db;"
+  psql -U postgres -c "CREATE DATABASE booking_db;"
+  psql -U postgres -d booking_db -f setup-db-permissions.sql
+  psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
+  ```
+
+**Random port access issues**
+- Clear Maven cache: `rm -rf ~/.m2/repository` (Unix) or `%USERPROFILE%\.m2\repository` (Windows)
+- Rebuild: `mvn clean install`
 
 ## 📄 License
 
