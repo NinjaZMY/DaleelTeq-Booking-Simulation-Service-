@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Refined (One)",
+    "workbench.colorTheme": "Base16 Dark Harmonic",
     "java.compile.nullAnalysis.mode": "disabled",
     "java.configuration.updateBuildConfiguration": "interactive"
 }
