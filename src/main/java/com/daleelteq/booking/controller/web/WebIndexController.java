@@ -10,8 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.stream.Collectors;
 
+/**
+ * DEPRECATED: This controller is no longer used.
+ * UIController now handles routing for / /ui and /ui/home endpoints.
+ * Kept for reference only.
+ */
 @Controller
-@RequestMapping("/")
+@RequestMapping("/deprecated/web-index")  // Changed to unused path to prevent conflicts
 @RequiredArgsConstructor
 public class WebIndexController {
 

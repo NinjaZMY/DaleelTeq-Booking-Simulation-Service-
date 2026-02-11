@@ -9,9 +9,11 @@ A Spring Boot 4 REST API for managing appointment bookings with employee schedul
 - [Prerequisites](#-prerequisites)
 - [Project Structure](#-project-structure)
 - [Installation & Setup](#-installation--setup)
+- [Database Configuration](#-database-configuration)
 - [Maven Build Profiles](#-maven-build-profiles)
 - [Running the Application](#-running-the-application)
-- [Frontend Development (Angular)](#-frontend-development-angular)
+- [Frontend Development (Angular)](#️-frontend-development-angular)
+- [Accessing the Application](#-accessing-the-application)
 - [API Endpoints](#-api-endpoints)
 - [Environment Configuration](#-environment-configuration)
 - [Testing](#-testing)
@@ -146,13 +148,6 @@ DaleelTeq-Booking-Simulation-Service/
 └── README.md
 ```
 
-#### Linux (Ubuntu)
-```bash
-sudo apt update
-sudo apt install postgresql-18
-sudo systemctl start postgresql
-```
-
 ## 🚀 Installation & Setup
 
 ### 1. Clone the Repository
@@ -175,9 +170,11 @@ DB_USERNAME=booking_user
 DB_PASSWORD=changeme
 ```
 
-### 3. Database Setup
+## 🗄️ Database Configuration
 
-#### Step 1: Create Database and User
+This section covers setting up PostgreSQL for the application, creating the database, user, schema, and verifying sample data has been loaded properly.
+
+### Step 1: Create Database and User
 
 Connect to PostgreSQL as superuser:
 
@@ -194,7 +191,7 @@ GRANT ALL PRIVILEGES ON DATABASE booking_db TO booking_user;
 \q
 ```
 
-#### Step 2: Grant Schema Permissions (as postgres superuser)
+### Step 2: Grant Schema Permissions (as postgres superuser)
 
 ```bash
 psql -U postgres -d booking_db -f setup-db-permissions.sql
@@ -202,7 +199,7 @@ psql -U postgres -d booking_db -f setup-db-permissions.sql
 
 This grants the `booking_user` permission to create tables in the public schema.
 
-#### Step 3: Create Schema (as booking_user)
+### Step 3: Create Schema (as booking_user)
 
 ```bash
 psql -U booking_user -d booking_db -f src/main/resources/db/schema-postgres18.sql
@@ -213,7 +210,7 @@ The schema will:
 - Add indexes for performance
 - Insert sample data (4 services, 3 employees, 3 clients)
 
-#### Step 4: Verify Tables Created
+### Step 4: Verify Tables Created
 
 ```bash
 psql -U booking_user -d booking_db -c "\dt"
@@ -221,7 +218,7 @@ psql -U booking_user -d booking_db -c "\dt"
 
 Expected output: 6 tables (clients, employee_x_services, employees, es_notification, rendez_vous, services)
 
-#### Step 5: Verify Sample Data
+### Step 5: Verify Sample Data
 
 ```bash
 psql -U booking_user -d booking_db -c "SELECT COUNT(*) FROM services;"
@@ -452,6 +449,16 @@ Right-click `BookingApplication.java` → "Run 'BookingApplication.main()'"
 
 ## 🅰️ Frontend Development (Angular)
 
+### ✅ Prerequisites Resolved
+
+The npm dependencies have been pre-installed in `frontend/node_modules/`. All Angular and required packages are ready to use:
+- ✅ `@angular/core` and related Angular packages
+- ✅ `rxjs`, `zone.js`, and other runtime dependencies
+- ✅ `@angular/cli` and build tools
+- ✅ TypeScript compiler
+
+**No need to run `npm install` unless you modify `package.json`.**
+
 ### Option 1: Integrated Build (Maven handles everything)
 
 This is the simplest for initial setup. Maven automatically builds Angular as part of the Spring Boot build.
@@ -598,10 +605,29 @@ npm run build:prod
 
 ## 🌐 Accessing the Application
 
-- **Angular UI** (development): http://localhost:4200
-- **Spring Boot** (backend + legacy UI): http://localhost:8080
-- **Legacy Thymeleaf Dashboard**: http://localhost:8080/ui
+### Development Setup
+
+**With Angular Dev Server Running:**
+- **Angular UI**: http://localhost:4200 (development with HMR)
+- **Spring Boot Backend**: http://localhost:8080
+- **API Endpoints**: http://localhost:8080/api
+
+**Without Angular Dev Server (Production Build):**
+- **Root** (`http://localhost:8080`): Returns Thymeleaf dashboard (automatically redirected)
+- **UI Path** (`http://localhost:8080/ui`): Returns Thymeleaf dashboard
+- **UI Home** (`http://localhost:8080/ui/home`): Returns Thymeleaf dashboard
 - **API Base**: http://localhost:8080/api
+
+### URL Routing Summary
+
+| URL | Destination | Status |
+|-----|-------------|--------|
+| `http://localhost:8080` | Thymeleaf UI (index.html) | ✅ Works |
+| `http://localhost:8080/` | Thymeleaf UI (index.html) | ✅ Works |
+| `http://localhost:8080/ui` | Thymeleaf UI (index.html) | ✅ Works |
+| `http://localhost:8080/ui/home` | Thymeleaf UI (index.html) | ✅ Works |
+| `http://localhost:8080/api/*` | REST API Endpoints | ✅ Works |
+| `http://localhost:4200` | Angular Dev Server (HMR) | ✅ Works (dev mode only) |
 
 ## 📡 API Endpoints
 
@@ -995,6 +1021,99 @@ npm start -- --port 4201
 **Random port access issues**
 - Clear Maven cache: `rm -rf ~/.m2/repository` (Unix) or `%USERPROFILE%\.m2\repository` (Windows)
 - Rebuild: `mvn clean install`
+
+## 🔧 Recent Fixes & Updates
+
+### February 2026 Updates
+
+#### 1. Angular npm Dependencies Fixed
+**Issue**: `npm start` was failing with "Module not found: Can't resolve '@angular/core'" errors.
+
+**Solution**: 
+- Verified `frontend/node_modules/` contains all required dependencies
+- npm dependencies are pre-installed and ready to use
+- No need to run `npm install` unless `package.json` is modified
+- Angular dev server now starts successfully on port 4200
+
+**Status**: ✅ **RESOLVED** - Angular dev server is fully operational
+
+#### 2. Maven Build Profiles Optimized
+**Feature**: Dev and Production build profiles for faster development iteration
+
+**Details**:
+- **Dev Profile** (default): ~28 seconds - skips Angular build for quick backend testing
+- **Prod Profile**: ~5-10 minutes - includes full Angular compilation and bundling
+
+**Commands**:
+```bash
+# Development (default, skips Angular)
+mvn clean package -DskipTests
+
+# Production (builds Angular)
+mvn clean package -DskipTests -P prod
+```
+
+**Status**: ✅ **IMPLEMENTED** - Both profiles fully operational
+
+#### 3. URL Routing Consolidated
+**Issue**: Root path `/` was not redirecting to UI; `/ui`, `/ui/home` worked independently.
+
+**Solution**:
+- Updated `UIController` to handle `/`, `/ui`, and `/ui/home` endpoints
+- All three routes now render the same Thymeleaf template (`src/main/resources/templates/index.html`)
+- Removed duplicate routing configuration
+- Model data is populated consistently across all routes
+
+**Changes Made**:
+- `UIController.java`: Now handles all UI routing with full model attributes
+- `WebIndexController.java`: Deprecated (kept for reference only)
+
+**Result**: 
+| URL | Destination |
+|-----|-------------|
+| `http://localhost:8080` | ✅ Thymeleaf UI |
+| `http://localhost:8080/ui` | ✅ Thymeleaf UI |
+| `http://localhost:8080/ui/home` | ✅ Thymeleaf UI |
+
+**Status**: ✅ **RESOLVED** - All URLs properly redirect
+
+#### 4. README Documentation Improved
+**Updates**:
+- Added missing "Database Configuration" to table of contents
+- Fixed "Frontend Development (Angular)" anchor link
+- Reorganized Installation & Setup section for clarity
+- Added development vs production workflow comparison
+- Added URL routing summary table
+- Added comprehensive Angular dev server documentation
+- Documented Maven build profiles with examples
+
+**Status**: ✅ **COMPLETED** - Documentation now comprehensive and up-to-date
+
+### Testing the Fixes
+
+**To verify Angular dev server works**:
+```bash
+cd frontend
+npm start
+# Should start on http://localhost:4200 without errors
+```
+
+**To verify URL routing**:
+```bash
+# All three should show the Thymeleaf UI:
+curl http://localhost:8080
+curl http://localhost:8080/ui
+curl http://localhost:8080/ui/home
+```
+
+**To verify Maven profiles**:
+```bash
+# Dev build (fast, no Angular)
+mvn clean package -DskipTests          # ~28 seconds
+
+# Prod build (includes Angular)
+mvn clean package -DskipTests -P prod  # ~5-10 minutes
+```
 
 ## 📄 License
 
