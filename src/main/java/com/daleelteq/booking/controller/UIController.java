@@ -20,6 +20,7 @@ public class UIController {
     private final NotificationRepository notificationRepository;
 
     // Serve the Thymeleaf UI at multiple endpoints to maintain backward compatibility
+//        @GetMapping({"/", "/ui"})
     @GetMapping({"/", "/ui", "/ui/home"})
     public String index(Model model) {
         // Populate lists for display
